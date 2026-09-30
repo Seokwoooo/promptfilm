@@ -13,7 +13,7 @@ one self-contained HTML file that loops seamlessly and exports as a frame-exact 
 
 English · [한국어](README.ko.md)
 
-<img src="docs/blackwell-zoom.webp" width="560" alt="An example film, sped up: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
+<img src="docs/blackwell-zoom.webp" width="440" alt="An example film, sped up: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
 
 <sub><i>"Zoom from a Blackwell graphics card down to single atoms" — one of the two reference films, sped up</i></sub>
 
@@ -83,7 +83,7 @@ Everything stays on your machine: the Studio listens on `127.0.0.1` only.
 
 ## Requirements
 
-| | |
+| Tool | Used for |
 |---|---|
 | **Claude Code** | Recommended: Claude Opus 5.5, Sonnet 5.5 or Fable 5.1 (or newer), effort medium or above. Elsewhere it still runs and says once that quality can't be guaranteed. |
 | **Node.js 20+** | the scripts |
@@ -105,7 +105,11 @@ work; Windows is untested (WSL is the safer route).
 ```
 
 Claude Code installs the scripts' packages for you. The skill is `/promptfilm:promptfilm`, and it also starts by itself when you ask for
-a motion graphic. To update later: `claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm`.
+a motion graphic. To update later, from a shell:
+
+```sh
+claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
+```
 
 ### As a personal skill
 

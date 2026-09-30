@@ -13,7 +13,7 @@ HTML 파일 하나로 끝나고, 끊김 없이 반복 재생되며, 프레임 �
 
 [English](README.md) · 한국어
 
-<img src="docs/blackwell-zoom.webp" width="560" alt="예제 영상을 빠르게 돌린 모습: 데이터센터에서 그래픽카드, 칩 내부, 메모리 셀과 논리 셀을 거쳐 실리콘 결정까지">
+<img src="docs/blackwell-zoom.webp" width="440" alt="예제 영상을 빠르게 돌린 모습: 데이터센터에서 그래픽카드, 칩 내부, 메모리 셀과 논리 셀을 거쳐 실리콘 결정까지">
 
 <sub><i>"블랙웰 그래픽카드 본체부터 원자 단위까지 확대해 줘" — 이 스킬의 기준이 된 두 영상 중 하나를 빠르게 돌린 모습</i></sub>
 
@@ -83,7 +83,7 @@ Node.js 20 이상, ffmpeg, Chrome도 필요해요. 자세한 건 [필요한 것]
 
 ## 필요한 것
 
-| | |
+| 도구 | 용도 |
 |---|---|
 | **Claude Code** | 권장: Claude Opus 5.5, Sonnet 5.5, Fable 5.1(또는 그보다 새 버전), effort medium 이상. 다른 환경에서도 돌아가지만, 품질을 보장할 수 없다고 처음에 한 번 알려 줘요. |
 | **Node.js 20 이상** | 스크립트 실행 |
@@ -105,8 +105,11 @@ Linux에서도 돌아갈 거예요. Windows는 확인하지 않았으니 WSL을 
 ```
 
 스크립트가 쓰는 패키지는 Claude Code가 알아서 깔아 줘요. 스킬 이름은 `/promptfilm:promptfilm`이고, 모션그래픽을 만들어 달라고만
-해도 저절로 시작돼요. 나중에 업데이트할 때는
-`claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm`을 실행하세요.
+해도 저절로 시작돼요. 나중에 업데이트할 때는 셸에서 이렇게 실행하세요.
+
+```sh
+claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
+```
 
 ### 개인 스킬로 직접 복사
 
@@ -120,7 +123,7 @@ cd ~/.claude/skills/promptfilm/scripts && npm install
 
 ### 설치 확인
 
-Claude Code에 **"promptfilm 셀프테스트 돌려줘"**라고 하세요. 10분쯤 걸려요. 임시 폴더에 엔진 테스트 영상을 만들고 모든 검사를
+Claude Code에 "promptfilm 셀프테스트 돌려줘"라고 하세요. 10분쯤 걸려요. 임시 폴더에 엔진 테스트 영상을 만들고 모든 검사를
 돌려요. 일부러 심어 둔 결함을 검사가 잡아내는지도 함께 확인합니다.
 
 ## 사용법
@@ -135,7 +138,7 @@ Make a motion graphic that zooms from a grain of sand out to the whole Sahara
 
 "스튜디오 열어줘", "리뷰 반영해줘", "mp4로 뽑아줘" 같은 후속 요청도 돼요.
 
-영상은 작업 폴더 안에 하나씩 폴더(`./<영상 이름>/`)로 만들어져요. 첫 질문에 한 답은 `./.promptfilm/settings.json`에 저장되고,
+영상마다 작업 폴더 안에 폴더가 하나씩(`./<영상 이름>/`) 만들어져요. 첫 질문에 한 답은 `./.promptfilm/settings.json`에 저장되고,
 다음번에 먼저 추천돼요.
 
 ## 내 취향으로 바꾸기
