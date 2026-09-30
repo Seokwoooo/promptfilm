@@ -503,6 +503,11 @@ const SEM = {
     }`,
 };
 const semPass = new ShaderPass(SEM);
+// ShaderPass clones its uniforms, and a clone of the AO pass's depth texture shares its GPU storage: with clones holding it, the
+// storage is never freed and can't grow when the window is resized (the AO buffers go incomplete and an early frame stays on
+// screen). Both passes read the AO pass's own depth texture instead.
+dofPass.uniforms.tDepth.value = gtao.depthTexture;
+semPass.uniforms.tDepth.value = gtao.depthTexture;
 composer.addPass(semPass);
 const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.26, 0.5, 0.95);
 composer.addPass(bloom);

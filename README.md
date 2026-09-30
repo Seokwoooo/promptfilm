@@ -13,7 +13,7 @@ one self-contained HTML file that loops seamlessly and exports as a frame-exact 
 
 English · [한국어](README.ko.md)
 
-<img src="docs/blackwell-zoom.webp" width="440" alt="An example film, sped up: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
+<img src="docs/preview-blackwell.webp" width="440" alt="An example film, sped up: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
 
 <sub><i>"Zoom from a Blackwell graphics card down to single atoms" — one of the two reference films, sped up</i></sub>
 
