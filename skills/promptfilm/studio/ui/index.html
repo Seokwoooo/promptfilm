@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promptfilm Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0d11'/%3E%3Ccircle cx='16' cy='16' r='8.5' fill='none' stroke='%238fd3ff' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%238fd3ff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/ui/studio.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="brand"><span class="mark" aria-hidden="true"></span><b>Promptfilm</b><span>Studio</span></div>
+    <select id="film-select" class="sel" data-title="film"></select>
+    <select id="version-select" class="sel" data-title="version" hidden></select>
+    <div class="seg" id="view-tabs" hidden><button data-v="film" data-t="tabFilm"></button><button data-v="board" data-t="tabBoard"></button></div>
+    <div class="spacer"></div>
+    <span id="offline" class="offline" hidden><i></i><span data-t="offline"></span></span>
+    <button class="icon-btn" id="help-btn" data-title="shortcuts" aria-label="?"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.2"/><path d="M8 7.9a2.1 2.1 0 1 1 3 1.9c-.7.4-1 .8-1 1.6v.3M10 14.2v.1"/></svg></button>
+  </header>
+
+  <main id="viewer">
+    <div id="stage">
+      <iframe id="film" title="film" tabindex="-1"></iframe>
+      <div id="safe-layer" hidden></div>
+      <div id="hit"></div>
+      <div id="pin-layer"></div>
+      <div id="stage-msg" hidden></div>
+    </div>
+    <div id="mode-hint" hidden data-t="commentHint"></div>
+    <div id="empty" hidden></div>
+  </main>
+
+  <section id="board" hidden></section>
+
+  <section id="timeline">
+    <div id="transport">
+      <div class="group">
+        <button class="icon-btn" id="step-back" data-title="stepBack"><svg viewBox="0 0 20 20"><path d="M12.5 5 7.5 10l5 5"/></svg></button>
+        <button class="play" id="play" data-title="playPause"><svg class="i-play" viewBox="0 0 20 20"><path d="M6.5 4.5v11l9-5.5z"/></svg><svg class="i-pause" viewBox="0 0 20 20"><path d="M6.5 4.5v11M13.5 4.5v11"/></svg></button>
+        <button class="icon-btn" id="step-fwd" data-title="stepFwd"><svg viewBox="0 0 20 20"><path d="M7.5 5l5 5-5 5"/></svg></button>
+      </div>
+      <div class="time"><b id="t-now">0:00.00</b><span>/</span><span id="t-total">0:00.00</span></div>
+      <div id="pace-bar" hidden><span id="pace-sum"></span><button class="btn ghost small" id="pace-undo" data-t="paceUndo"></button><button class="btn ghost small" id="pace-reset" data-t="paceReset"></button></div>
+      <div class="spacer"></div>
+      <button class="toggle" id="tg-comment" data-t="comment" data-title="commentKey"></button>
+      <select id="rate" class="sel mini" data-title="rate"><option value="1" selected>1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select>
+    </div>
+    <div id="tl">
+      <div id="tl-names"></div>
+      <div id="tl-scroll">
+        <div id="tl-inner">
+          <div id="tl-ruler"></div>
+          <div id="tl-lanes"></div>
+          <div id="tl-head"><i></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside id="side">
+    <section class="card" id="review-card">
+      <div class="card-head">
+        <h2 data-t="review"></h2><span class="count" id="review-count"></span>
+        <div class="spacer"></div>
+        <span id="claude-state" class="cstate off"><i></i><span></span></span>
+      </div>
+      <div id="review-list"></div>
+      <div class="card-foot">
+        <button class="btn ghost" id="add-general" data-t="addGeneral"></button>
+        <button class="btn primary" id="copy-claude"></button>
+      </div>
+    </section>
+
+    <section class="card" id="render-card">
+      <div class="card-head"><h2 data-t="render"></h2><span class="count" id="render-size"></span></div>
+      <div class="render-form">
+        <div class="seg wide" id="quality"><button data-q="final" class="on" data-t="final"></button><button data-q="draft" data-t="draft"></button></div>
+        <label class="check"><input type="checkbox" id="render-text" checked><span data-t="withText"></span></label>
+      </div>
+      <div id="render-gate" class="gate" hidden></div>
+      <div class="row">
+        <button class="btn primary grow" id="render-start" data-t="startRender"></button>
+        <button class="btn" id="still-btn" data-t="still" data-title="stillHint"></button>
+      </div>
+      <div id="render-job" hidden>
+        <div class="bar"><i id="render-bar"></i></div>
+        <div class="job-line"><span id="render-status"></span><div class="spacer"></div><button class="btn ghost small" id="render-cancel" data-t="cancelRender"></button></div>
+      </div>
+      <div id="render-list"></div>
+    </section>
+  </aside>
+</div>
+
+<div id="tip" hidden></div>
+<div id="pop" hidden>
+  <textarea id="pop-text" rows="3"></textarea>
+  <div class="pop-foot"><span class="hint" data-t="enterSave"></span><div class="spacer"></div><button class="btn ghost small" id="pop-cancel" data-t="cancel"></button><button class="btn primary small" id="pop-save" data-t="save"></button></div>
+</div>
+<div id="beatpop" hidden>
+  <div class="bp-head"><span class="sw" id="bp-sw"></span><b id="bp-name"></b><span class="count" id="bp-kind"></span></div>
+  <div class="bp-dur" id="bp-dur"></div>
+  <div class="bp-btns"><button class="btn" id="bp-slower" data-t="bp_slower"></button><button class="btn" id="bp-faster" data-t="bp_faster"></button></div>
+  <div class="pop-foot"><button class="btn ghost small" id="bp-reset" data-t="bp_reset"></button><div class="spacer"></div><button class="btn ghost small" id="bp-close" data-t="bp_close"></button></div>
+</div>
+<div id="lightbox" hidden><img alt=""></div>
+<div id="help" hidden></div>
+<div id="toasts"></div>
+<script src="/ui/studio.js"></script>
+</body>
+</html>

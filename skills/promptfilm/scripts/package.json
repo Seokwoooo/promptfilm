@@ -1,0 +1,14 @@
+{
+  "name": "promptfilm-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QA, rendering and Studio tools of the promptfilm skill",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright-core": "^1.63.0",
+    "pngjs": "^7.0.0"
+  }
+}

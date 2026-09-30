@@ -1,0 +1,13 @@
+{
+  "name": "promptfilm",
+  "private": true,
+  "description": "The packages the promptfilm skill's scripts use. Claude Code installs them when it installs the plugin; for a skill copied by hand, run npm install in skills/promptfilm/scripts instead.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright-core": "^1.63.0",
+    "pngjs": "^7.0.0"
+  }
+}

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosmic Size Ladder</title>
+<!--
+  COSMIC SIZE LADDER — from Earth to the edge of the observable universe
+  A real-time 3D loop (Three.js r160, WebGL2). Silent. No input required.
+
+  Part 1 (size lineup): Earth first, then the familiar giants (Neptune, Uranus, Saturn, Jupiter), two famous planets
+  of other stars (both larger than Jupiter), the Sun and eight other stars, placed side by side at their true relative
+  sizes, bottoms on one line, each new one joining on the right.
+  Earth stays in every comparison view (marked when it is too small to see). They live in different star systems;
+  the lineup is a comparison device, anchored at the real Sun. Part 2 (map): from the Sun outward at true scale — planetary
+  orbits, Kuiper belt, heliosphere, the Planet Nine hypothesis, Oort cloud, neighbouring stars, the Local Bubble,
+  Radcliffe Wave, Orion Spur, the Milky Way, its satellites, the Local Group, nearby groups, the Local Supercluster,
+  Laniakea, the proposed Pisces–Cetus complex, Quipu, the cosmic web and the observable universe.
+
+  DATA (real): planet radii — NASA Exoplanet Archive default parameter sets (references in FACTS); solar-system
+  radii — NASA planetary fact sheets; star radii — interferometry / spectroscopy papers listed in FACTS; star positions
+  and magnitudes — HYG database v4.1 (astronexus, CC BY-SA 4.0), with literature distances for Betelgeuse, Antares,
+  Deneb and VY CMa; nearby galaxies — Updated Nearby Galaxy Catalog (Karachentsev et al. 2013); galaxies beyond 11 Mpc —
+  2MASS Redshift Survey (Huchra et al. 2012); superstructure clusters incl. Quipu — Böhringer et al. 2025
+  (VizieR J/A+A/695/A59); spiral arms — Reid et al. 2019 (R0 = 8.15 kpc); Radcliffe Wave — Alves et al. 2020.
+  Earth map: NASA Blue Marble; night lights: NASA Earth Observatory Black Marble 2016. Jupiter map: NASA/JPL/Space
+  Science Institute (Cassini, PIA07782). Saturn map and Neptune cloud detail: Solar System Scope (CC BY 4.0), from
+  NASA/JPL Cassini and Voyager imagery; Neptune recoloured to the paler measured tint (Irwin et al. 2024). Milky Way seen from the Sun: NASA/Goddard Space Flight Center Scientific
+  Visualization Studio, Deep Star Maps 2020 (Milky Way layer, Galactic coordinates); Gaia DR2: ESA/Gaia/DPAC. Beyond
+  ~600 pc the Galaxy's stars are sampled from the Galaxy model (arms, bar, disc), dimmed by the model's dust.
+  LOOK: planets are lit by one key light with a soft glow drawn in proportion to each planet (as a camera sees a bright
+  subject), so a planet looks the same near or far; colours slightly strengthened, as in outreach images. A body not
+  yet introduced is not drawn; it fades in, lit, while still outside the view. Sunlight reddens where it grazes an
+  atmosphere at the terminator; the exposure stops down, and faint stars vanish, when a sunlit planet fills the view.
+  ILLUSTRATIVE (and labelled so on screen): every exoplanet's surface and pattern, star surfaces, the heliosphere
+  shape, Kuiper-belt and Oort-cloud objects, the Local Bubble and Radcliffe Wave gas, the Milky Way and other galaxy
+  images (a model built on the arm fits), Laniakea flow lines, the Pisces–Cetus outline and the cosmic web beyond the
+  2MRS survey (a simulation with the right statistics, not a map).
+  The loop closes on itself: from the observable universe the camera retraces the journey home (~17 s) and the film
+  begins again; the comparison stand-ins stay hidden on the way back, only Earth waits.
+  On the map, a panel gives the view's width as a multiple of Earth's diameter, then in human terms (Earth as a 1 mm
+  grain of sand, against familiar lengths), and at the largest scales the galaxies in a sphere that wide (up to ~2
+  trillion in all, Conselice et al. 2016; other estimates are several times lower). Stars: light output from
+  L ∝ R² T⁴ with the radii and temperatures above, shown as a glow that widens with it; the Sun drawn in its familiar
+  yellow (its light is white), its surface as a hydrogen-alpha solar telescope shows it (illustrative). The
+  observable universe is filled with ~450,000 galaxy specks along the web (illustrative positions).
+  Keys (optional): Space = pause/resume · R = restart · H = hide/show text. URL: ?t=seconds, ?freeze (QA).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Semi+Condensed:wght@500&family=Noto+Sans+KR:wght@500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #05070a;
+    --ink: #eef1f4;
+    --ink-dim: #a7b0ba;
+    --accent: #8fd3ff;
+    --face: "Barlow", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    --face-sub: "Barlow Semi Condensed", "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --face-ko: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  html, body { height: 100%; margin: 0; background: var(--bg); overflow: hidden; }
+  body { color: var(--ink); -webkit-font-smoothing: antialiased; }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); }
+  #frame {
+    position: relative; width: min(100vw, 100vh); height: min(100vw, 100vh);
+    max-width: 100%; overflow: hidden; background: var(--bg); container-type: size;
+  }
+  #frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #grade {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(125% 115% at 50% 46%, rgba(0,0,0,0) 60%, rgba(0,0,0,.38) 100%);
+  }
+  #black { position: absolute; inset: 0; background: #000; pointer-events: none; opacity: 1; }
+  #caption {
+    position: absolute; left: 7%; right: 7%; bottom: 7%;
+    pointer-events: none; opacity: 0; will-change: opacity, transform;
+  }
+  #caption::before {             /* soft scrim so the lines stay readable over bright subjects */
+    content: ''; position: absolute; z-index: -1; left: -14%; right: -10%; top: -45%; bottom: -60%;
+    background: radial-gradient(70% 62% at 34% 62%, rgba(3,5,8,.66), rgba(3,5,8,.34) 55%, rgba(3,5,8,0) 100%);
+  }
+  #caption .rule { width: 2.6cqw; min-width: 14px; height: 2px; background: var(--accent); margin-bottom: 1.4cqw; }
+  #cap-main {
+    font-family: var(--face); font-weight: 600; text-transform: uppercase;
+    font-size: clamp(15px, 3.6cqw, 44px); line-height: 1.08; letter-spacing: .06em;
+    text-wrap: balance; text-shadow: 0 1px 12px rgba(0,0,0,.6);
+  }
+  #cap-sub {
+    font-family: var(--face-sub); font-weight: 500; text-transform: uppercase;
+    font-size: clamp(11px, 1.95cqw, 23px); line-height: 1.3; letter-spacing: .1em;
+    color: var(--ink-dim); margin-top: .7em; text-wrap: balance; text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 1px 12px rgba(0,0,0,.6);
+  }
+  #cap-ko {
+    font-family: var(--face-ko); font-weight: 500; font-size: clamp(11px, 1.85cqw, 22px); line-height: 1.42;
+    letter-spacing: .01em; color: #ccd4dc; margin-top: .45em; text-wrap: balance; word-break: keep-all;
+    text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 1px 12px rgba(0,0,0,.6);
+  }
+  #frame.nolabels #caption, #frame.nolabels #hud, #frame.nolabels #tags { display: none; }
+  /* labels pinned to the 3D view: English name, Korean in parentheses, a dot on the object */
+  #tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  #tags .tag { position: absolute; left: 0; top: 0; opacity: 0; will-change: transform, opacity; }
+  #tags .tag > div { position: absolute; left: 0; bottom: 0; transform: translate(-50%, -12px); white-space: nowrap; text-align: center;
+    padding: .3em .6em .34em; background: rgba(6,9,13,.66); border: 1px solid rgba(143,211,255,.45); border-radius: 3px; }
+  #tags .tag.below > div { bottom: auto; top: 0; transform: translate(-50%, 12px); }
+  #tags .tag b { display: block; font: 600 clamp(8px, 1.42cqw, 15px)/1.15 var(--face); letter-spacing: .03em; color: #eef3f6; }
+  #tags .tag i { display: block; font: 500 clamp(7px, 1.22cqw, 13px)/1.2 var(--face-ko); font-style: normal; color: #c9d1d9; margin-top: .12em; }
+  #tags .tag::before { content: ''; position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px rgba(143,211,255,.9); }
+  #tags .tag::after { content: ''; position: absolute; left: -.5px; bottom: 0; width: 1px; height: 12px; background: rgba(143,211,255,.7); }
+  #tags .tag.below::after { bottom: auto; top: 0; }
+  /* size comparison right after a reveal: a ring on the smaller body and the ratio */
+  #callouts { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .co { position: absolute; left: 0; top: 0; opacity: 0; will-change: transform, opacity; }
+  .co .ring { position: absolute; left: 0; top: 0; border: 1.5px solid rgba(143,211,255,.9); border-radius: 50%;
+    box-shadow: 0 0 10px rgba(143,211,255,.45), inset 0 0 8px rgba(143,211,255,.25); transform: translate(-50%, -50%); }
+  .co .lab { position: absolute; left: 0; top: 0; white-space: nowrap; padding: .34em .7em .4em; background: rgba(6,9,13,.72);
+    border-left: 2px solid var(--accent); transform: translate(-50%, 0); text-align: left; }
+  .co .lab b { display: block; font: 600 clamp(12px, 2.6cqw, 30px)/1 var(--face); color: #eaf6ff; letter-spacing: .02em; }
+  .co .lab span { display: block; font: 500 clamp(8px, 1.35cqw, 15px)/1.25 var(--face-sub); color: #c6d4de; letter-spacing: .06em; text-transform: uppercase; margin-top: .3em; }
+  .co .lab i { display: block; font: 500 clamp(8px, 1.3cqw, 14px)/1.25 var(--face-ko); font-style: normal; color: #c9d1d9; margin-top: .15em; }
+  #frame.nolabels #callouts { display: none; }
+  /* leader labels: a ring on a body too small to see well, a thin line, and its name */
+  #leaders { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  #leaders circle { fill: none; stroke: rgba(143,211,255,.95); stroke-width: 1.4; }
+  #leaders polyline { fill: none; stroke: rgba(143,211,255,.8); stroke-width: 1.1; }
+  #leadlabs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  #leadlabs .ld { position: absolute; left: 0; top: 0; opacity: 0; will-change: transform, opacity; }
+  #leadlabs .ld > div { position: absolute; left: 0; top: 0; white-space: nowrap; text-align: center; padding: .28em .62em .32em;
+    background: rgba(6,9,13,.72); border: 1px solid rgba(143,211,255,.5); border-radius: 3px; transform: translate(-50%, -100%); }
+  #leadlabs .ld b { display: block; font: 600 clamp(8px, 1.42cqw, 15px)/1.15 var(--face); letter-spacing: .03em; color: #eef3f6; }
+  #leadlabs .ld i { display: block; font: 500 clamp(7px, 1.22cqw, 13px)/1.2 var(--face-ko); font-style: normal; color: #c9d1d9; margin-top: .12em; }
+  #frame.nolabels #leaders, #frame.nolabels #leadlabs { display: none; }
+  #tags .tag.hyp > div { border-style: dashed; border-color: rgba(255,210,140,.6); }
+  #tags .tag.hyp::before { background: #ffd28c; box-shadow: 0 0 6px rgba(255,210,140,.9); }
+  #tags .tag.hyp::after { background: rgba(255,210,140,.7); }
+  /* field-of-view ruler: ten thousand kilometres (top) to a hundred billion light-years (bottom) */
+  #hud { position: absolute; right: 4.2%; top: 6.5%; height: 44%; width: 30cqw; pointer-events: none; }
+  #hud-title { position: absolute; right: 0; top: -2.9cqw; font: 500 clamp(8px, 1.3cqw, 14px)/1 var(--face-sub); letter-spacing: .14em;
+    text-transform: uppercase; color: rgba(233,238,242,.5); white-space: nowrap; }
+  #hud-title span { font-family: var(--face-ko); letter-spacing: 0; text-transform: none; }
+  #hud-line { position: absolute; right: 0; top: 0; bottom: 0; width: 1px; background: rgba(233,238,242,.25); }
+  #hud .tick { position: absolute; right: 0; width: .9cqw; height: 1px; background: rgba(233,238,242,.4); }
+  #hud .tick span { position: absolute; right: 1.5cqw; top: -.62em; font: 500 clamp(7px, 1.25cqw, 13px)/1 var(--face-sub);
+    letter-spacing: .05em; color: rgba(233,238,242,.42); white-space: nowrap; }
+  #hud-mark { position: absolute; right: -.5cqw; width: 2.2cqw; height: 2px; margin-top: -1px; background: var(--accent);
+    box-shadow: 0 0 8px rgba(143,211,255,.7); }
+  #hud-val { position: absolute; right: 12.2cqw; margin-top: -.62em; font: 600 clamp(9px, 1.7cqw, 19px)/1 var(--face);
+    letter-spacing: .04em; color: #cfeaff; white-space: nowrap; text-shadow: 0 1px 6px rgba(0,0,0,.85); }
+  /* the scale in human terms, on the map: how many Earths wide the view is; and with Earth a 1 mm grain of sand, how wide */
+  #scale { position: absolute; left: 4.2%; top: 5.2%; width: 46cqw; pointer-events: none; opacity: 0; padding-left: .9em;
+    border-left: 2px solid var(--accent); will-change: opacity; }
+  #scale .k { font: 500 clamp(8px, 1.3cqw, 14px)/1.3 var(--face-sub); letter-spacing: .14em; text-transform: uppercase; color: rgba(233,238,242,.62); }
+  #scale .k span { font-family: var(--face-ko); letter-spacing: 0; text-transform: none; }
+  #scale .v { font: 600 clamp(15px, 3.3cqw, 38px)/1.1 var(--face); color: #eaf6ff; margin-top: .22em; letter-spacing: .01em;
+    font-variant-numeric: tabular-nums; text-shadow: 0 1px 10px rgba(0,0,0,.7); white-space: nowrap; }
+  #scale .v small { font: 500 clamp(8px, 1.3cqw, 14px)/1 var(--face-sub); letter-spacing: .12em; text-transform: uppercase; color: rgba(233,238,242,.62); margin-right: .5em; }
+  #scale .v i { font: 500 clamp(9px, 1.5cqw, 17px)/1 var(--face-ko); font-style: normal; color: #c9d1d9; margin-left: .45em; }
+  #scale .r { font: 500 clamp(8px, 1.3cqw, 14px)/1.35 var(--face-sub); color: #cfe0ec; letter-spacing: .04em; margin-top: .45em; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+  #scale .r i { display: block; font: 500 clamp(8px, 1.3cqw, 14px)/1.4 var(--face-ko); font-style: normal; color: #c3ccd5; letter-spacing: 0; }
+  #scale .n { font: 500 clamp(8px, 1.25cqw, 14px)/1.35 var(--face-sub); color: rgba(233,238,242,.62); margin-top: .5em; letter-spacing: .05em; }
+  #scale .n i { display: block; font-family: var(--face-ko); font-style: normal; letter-spacing: 0; }
+  #frame.nolabels #scale { display: none; }
+  #err {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 0 10%;
+    font: 500 15px/1.5 var(--face); color: var(--ink); text-align: center; background: var(--bg);
+  }
+  #err b { display: block; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: .5em; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { #caption { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="frame">
+    <div id="grade"></div>
+    <div id="tags" aria-hidden="true"></div>
+    <svg id="leaders" aria-hidden="true"></svg>
+    <div id="leadlabs" aria-hidden="true"></div>
+    <div id="callouts" aria-hidden="true"></div>
+    <div id="scale" aria-hidden="true"><div class="k">This view = Earth's diameter <span>(화면 폭 = 지구 지름의)</span></div><div class="v"></div><div class="r"></div><div class="n"></div></div>
+    <div id="hud" aria-hidden="true"><div id="hud-title">Field of view <span>(화면 폭)</span></div><div id="hud-line"></div><div id="hud-mark"></div><div id="hud-val"></div></div>
+    <div id="caption"><div class="rule"></div><div id="cap-main"></div><div id="cap-sub"></div><div id="cap-ko" lang="ko"></div></div>
+    <div id="black"></div>
+    <div id="err" hidden><div><b>Playback unavailable</b><span id="err-msg"></span></div></div>
+  </div>
+</div>
+
+<script>
+  // Classic (non-module) guard: reports a visible error if the module graph never starts.
+  window.__showError = function (msg) {
+    var box = document.getElementById('err');
+    document.getElementById('err-msg').textContent = msg;
+    box.hidden = false;
+  };
+  window.__bootTimer = setTimeout(function () {
+    if (!window.__started) window.__showError('The 3D engine did not load (network or CDN blocked). Reload the page to try again.');
+  }, 25000);
+  window.addEventListener('error', function (e) {
+    if (!window.__started && e && e.message) window.__showError('Startup error: ' + e.message);
+  });
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';

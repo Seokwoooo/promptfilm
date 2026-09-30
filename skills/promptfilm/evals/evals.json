@@ -1,0 +1,149 @@
+{
+  "skill_name": "promptfilm",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "우주 스케일 영상, 지구부터 관측가능한 우주까지 확대하는 영상 html 만들어줘",
+      "expected_output": "Asks the kickoff question (aspect, length, languages; research only if medium/deep) with the defaults 9:16 · 45–60 s · English + Korean recommended; then a single-file HTML in the chosen format: Earth first, larger bodies in one direction, then the map scales out to the observable universe and back to the opening frame; 45–60 s loop; English + (Korean) captions, labels, ×N comparisons, ruler, human-scale panel; qa.mjs all pass; a Korean report with the five bold labels.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "블랙웰 글카 본체부터 원자단위까지 확대해서 보여주는 html 만들어줘",
+      "expected_output": "Asks one kickoff question: deep research consent (with a time estimate) plus aspect, length and caption languages, then researches public Blackwell sources (whitepaper, board/die photos), builds a sourced fact table, and makes a 9:16 HTML zooming from the whole card to atoms and back; illustrative parts labelled; qa.mjs all pass.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "사람 몸에서 시작해서 세포, DNA, 원자까지 계속 확대해 들어가는 쇼츠용 3D 영상 html 만들어줘",
+      "expected_output": "Sizes the research (medium/deep → asks), researches cell and DNA structure with sources, makes a 9:16 HTML zooming from a human body through tissue, cell, nucleus, chromatin, DNA double helix to atoms and back; nothing pops in; the full qa.mjs passes, a fresh reviewer's visual review passes, and gate.mjs says READY.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "애플 에어팟 프로 3 광고 느낌의 제품 모션그래픽 html 만들어줘",
+      "expected_output": "Decides a product-showcase format without asking; researches the real product (official page, press images, teardown) with consent if medium/deep; studio-lit 9:16 HTML at render quality (P29) with one continuous camera (no cuts), feature close-ups, an exploded view of the real parts, an end card; nothing pops in; every animated value returns at the loop; qa.mjs all pass incl. continuity.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "우주 슈팅 게임 데모 영상 같은 모션그래픽 만들어줘",
+      "expected_output": "Decides a game-demo format and invents an original game world without asking for assets; stylised ships and effects (deterministic particles) at a high modelling standard, one continuous camera flying through the action (no cuts), a title moment; bilingual captions; 9:16, 45–60 s loop; the full qa.mjs passes (incl. continuity, read, empty, surfaces), a fresh reviewer's visual review passes, and gate.mjs says READY.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "아폴로 11호 달 착륙 순간을 우주비행사 없이 재현하는 모션그래픽 html 만들어줘",
+      "expected_output": "Decides the 'recreation of a known scene' format; sizes the research and asks if medium/deep; watches reference footage with scripts/video_refs.sh and writes the order of events into visual-notes.md; rebuilds the lander, the surface and the light the way people remember them, with no people — actions carried by the objects' own motion and named in captions; short sourced quotes at most; every formation has a visible cause; the ending reinterpreted so the loop closes and said so in the report; 9:16, 45–60 s; qa.mjs all pass including labels; a Korean report with the five bold labels.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "16:9 가로로 30초짜리, 한국어 자막만 넣어서 서울 지하철 노선이 어떻게 늘어났는지 보여주는 모션그래픽 html 만들어줘",
+      "expected_output": "Does not ask about aspect, length or languages (the request answers them); asks at most the research question if the research is medium/deep. Saves the answers to ./.promptfilm/settings.json, runs new_film.sh with --aspect 16x9 --length 25-35 --langs ko, composes for a landscape frame (layout.md §5), writes Korean-only captions and labels (no parenthesised line), sets RULER.title if a ruler is used, and QA runs at 960 × 540 with the 25–35 s target.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "promptfilm 리뷰 반영해줘: aura — 열린 코멘트 2개 (aura/review.json)",
+      "expected_output": "Reads aura/review.json, opens every open pin's snapshot image and its context (t, x/y, tau, beat, caption), finds the cause in the film's parts (the τ in p8, the scene part), fixes it and every other place of the same kind, rebuilds, reruns the relevant QA, then writes back status \"done\", a short Korean reply and resolvedIn for each pin (leaving open, with a reason, any it cannot do). The Studio shows the replies and reloads the new build by itself; at the end it runs `studio/server.mjs <working-dir> --film aura` again so the page is in front of the requester (it switches the open page, or opens one), and the report lists what changed per comment.",
+      "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "이거 mp4로 뽑아줘",
+      "expected_output": "Checks the gate first (scripts/gate.mjs <film>/<name>.html). When it is READY, renders with scripts/render.mjs (or the Studio's \"MP4 만들기\") at its aspect's output size, 60 fps, frame-exact, one seamless loop, into <film>/render/ — the MP4 only: no .srt or other extra files nobody asked for (the captions are in the picture); reports the file, duration, frame count and the gate line. When it is NOT READY (no full QA of this build, or no passing visual review), runs what is missing first if it is quick; otherwise renders with --unchecked and says plainly in the report that this video has not passed its checks and which ones — never presents it as checked.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "(background watcher output) PROMPTFILM REQUEST — the requester pressed \"Send to Claude\" in the Studio … film aura … open comments (2) … pace edits in parts/p8z_pace.js: Inside ×2.35",
+      "expected_output": "Treats the watcher's exit as the start of a review round: opens both snapshots, fixes the comments (and others of their kind), keeps parts/p8z_pace.js untouched, rebuilds with build.mjs, reruns QA, writes status/reply/resolvedIn for each pin into aura/review.json, opens the Studio on the film again (`server.mjs <working-dir> --film aura`), starts `studio/await.mjs --film aura` again in the background, and reports briefly in Korean.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Inside 구간이 좀 느려서 스튜디오에서 속도 바꿨어. 이제 구간 이름 정리 좀 해줘",
+      "expected_output": "Reads parts/p8z_pace.js first; renames the beats in p8 as asked and moves each PACE_EDITS key to the beat's new name (so the requester's speed edits still apply); rebuilds; checks the engine reports no stale pace edit (PROBLEMS) and that the loop length is unchanged by the renaming.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "prompt": "(running on claude-sonnet-5 in Claude Code) 우주 스케일 영상 html 만들어줘",
+      "expected_output": "Runs scripts/env_check.mjs --model claude-sonnet-5 --lang ko first and shows its ⚠️ notice once at the start of the first reply (quality can't be guaranteed: model below Opus 5.5 / Sonnet 5.5 / Fable 5.1), then continues with the normal workflow (kickoff question, research, build) without lowering the bar or asking whether to continue.",
+      "files": []
+    },
+    {
+      "id": 13,
+      "prompt": "(running in a coding agent other than Claude Code) 우리 제품 광고 모션그래픽 만들어줘",
+      "expected_output": "Shows the notice (Claude Code가 아닌 환경 — 품질 보장 불가) once at the start — via env_check.mjs --lang ko if it can run it, else judging host/model itself and writing the same notice in Korean — then proceeds normally.",
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "(running on claude-opus-5-5 in Claude Code, effort high) 블랙홀 모션그래픽 만들어줘",
+      "expected_output": "Runs env_check.mjs, which reports the recommended environment; says nothing about the environment to the requester and starts the kickoff question.",
+      "files": []
+    },
+    {
+      "id": 15,
+      "prompt": "(research and plan.md are done for 'aura', a 9:16 speaker ad) 스토리보드 보여줘",
+      "expected_output": "Writes aura/storyboard.json as a decision page, not a copy of the plan: 6–10 short cards (a name of a few words, one plain sentence of what is seen, the caption as it will appear, played seconds; camera, facts and sources only as details; 'illustrative' only for a whole scene or hero drawn without a source), a 1–2 sentence summary, a one-language title. Before showing it, builds the look of the hook and the 2–3 main scenes at the quality bar (the hero in the film's light, the real caption), renders each framing with scripts/shot.mjs and sets it as that card's `frame` — never a sketch or a generated picture; other cards keep their best research photo first. Opens it with `studio/server.mjs <working-dir> --film aura` (the page opens on the Storyboard tab by itself), starts `studio/await.mjs --film aura` in the background, and tells the requester one line with the scene count, the length and the link http://127.0.0.1:<port>/#film=aura.",
+      "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "스튜디오 열어줘",
+      "expected_output": "Runs `node <skill>/studio/server.mjs <working-dir> --film <the film being worked on>` in the background: when a Studio for this folder is running it only opens the page on that film (or switches the page already open) and exits — no second server, no second tab; otherwise it starts one, which opens the page itself. Starts `studio/await.mjs --film <id>` if this session isn't waiting yet. Replies in one line with the link http://127.0.0.1:<port>/#film=<id>.",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "(background watcher output, in a session working on liberty-to-planck) PROMPTFILM STORYBOARD — the requester approved the storyboard in the Studio … film undersea-cable …",
+      "expected_output": "Sees that the request names another film than this session's: does not act on it (no build, no edit of undersea-cable), starts `studio/await.mjs --film liberty-to-planck` again in the background, and at most tells the requester in one line that the approval belongs to the undersea-cable session.",
+      "files": []
+    },
+    {
+      "id": 18,
+      "prompt": "mp4로 뽑아주고 유튜브에 올릴 자막 파일도 따로 줘",
+      "expected_output": "Renders the MP4 as in eval 9 and, because a subtitle file was asked for, adds --srt so <film>/render/<name>.srt carries the film's captions with the same timing; lists both files.",
+      "files": []
+    },
+    {
+      "id": 19,
+      "prompt": "카톡 메시지 하나가 폰에서 기지국, 데이터센터, 부산 육양국, 태평양 해저케이블, 중계기, 미국 데이터센터를 거쳐 친구 폰까지 가는 모션그래픽 만들어줘",
+      "expected_output": "Plans with the time budget (pacing.md §2) before the scene list is final: every captioned step is a stop held for its caption's reading time, moves under 3 e-folds/s, the way back ≤ 12% of the loop — so at 45–60 s about 8–11 stops. Steps that don't fit are merged into one stop with labels (e.g. the towns inland as labels on one map stop) or cut; detours such as rising to orbit and diving again are budgeted in e-folds. No caption names a place the picture doesn't show. The storyboard has 6–10 cards, each a stop. QA pace, read and empty pass.",
+      "files": []
+    },
+    {
+      "id": 20,
+      "prompt": "이거 너무 스킵되는 게 많아. 확대해서 하나씩 제대로 알려줘야지. 그리고 깨져 보이는 데도 많아.",
+      "expected_output": "Treats it as P3 and P30 across the whole film, not one spot: runs qa.mjs with pace, read and empty and lists each failing caption (up vs reading time, held vs needed), the fast moves (> 3 e-folds/s) and the empty stretches; steps through the 0.5 s contact sheets at full size for broken-looking frames (sections seen edge-on, parts standing alone, the camera through walls, smears, imagery seen too close). Re-plans the time budget (fewer stops, each held; shorter way back), rebuilds, and reports the before/after numbers.",
+      "files": []
+    },
+    {
+      "id": 21,
+      "prompt": "(after building a film) 다 됐으면 보고해줘",
+      "expected_output": "Does not report the film as done until the gate is READY: runs the full qa.mjs on the current build, runs scripts/review.mjs and gives the visual review to a fresh subagent with references/visual-review.md (not the code or plan), fixes every finding, rebuilds, re-runs full QA and a new review, and reports with 검사 결과 starting with the gate line for this build and the review's verdict. Checks from an earlier build or a partial run are never reported as passed.",
+      "files": []
+    },
+    {
+      "id": 22,
+      "prompt": "(during the build) 캡션 넣고 타임라인 짜줘",
+      "expected_output": "Every caption outside the way back declares the subject it tells about — caption(t0, t1, title, line, second, S.thing) with a subject whose radius is what the viewer should see — and is placed on a stop: the camera holds while that subject is framed at ≥ a third of the frame for ≥ 1.8 s (2.4 s in key beats), and the caption stays up for its reading time. Every model the camera sees from behind or inside is closed or double-sided. QA read and surfaces pass.",
+      "files": []
+    },
+    {
+      "id": 23,
+      "prompt": "(running on claude-sonnet-5-5 in Claude Code, effort medium) 제트엔진 내부 모션그래픽 만들어줘",
+      "expected_output": "Runs env_check.mjs --model claude-sonnet-5-5 --lang ko, which reports the recommended environment (Sonnet 5.5 is recommended, like Opus 5.5 and Fable 5.1 or newer); says nothing about the environment to the requester and starts the kickoff question.",
+      "files": []
+    },
+    {
+      "id": 24,
+      "prompt": "(running on claude-opus-5-5 in Claude Code, effort high) Make a motion graphic that zooms from a grain of sand out to the whole Sahara",
+      "expected_output": "Talks to the requester in English throughout. Runs env_check.mjs --model claude-opus-5-5 --lang en (recommended environment: says nothing about it). The kickoff question is in English, and its caption-language question recommends English only first (the default taste: English + the requester's language); saves the answers to ./.promptfilm/settings.json. The film's captions and labels follow the answer (no parenthesised Korean line for English only). The final report uses the English labels **Bottom line:** / **What changed** / **Checks** / **Limits** / **Files**, and Checks starts with the gate line.",
+      "files": []
+    }
+  ]
+}

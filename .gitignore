@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+
+# made by the skill's own test and debug runs
+skills/promptfilm/engine/demo-build/
+skills/promptfilm/engine/demo-ad-build/
+skills/promptfilm/scripts/flicker_probe/
+
+# a working folder's settings, if you make films inside this repository
+.promptfilm/

@@ -1,0 +1,24 @@
+
+/* ---------- warm-up: compile every material and upload buffers before the first frame is shown ---------- */
+function warmup() {
+  renderer.compile(scene, camera);
+  [0.5, STEP.saturn.tB, STEP.hd189733b.tH, STEP.hd189733b.tB, STEP.sun.tH, STEP.betelgeuse.tS, STEP.vycma.tB, s60a, soA, s10A, slbA, smwA, sm31A, svA, sqA, souA, T_HOME_MID - 1.5, T_HOME_MID + 0.8, startT].forEach(tau => renderAt(WARP.toT(tau)));
+}
+Promise.all([TEX_READY, SKY_READY]).then(() => {
+  try {
+    warmup();
+    window.__started = true;
+    // the one fade from black, on first start only (the loop itself never goes to black)
+    if (params.has('freeze')) BLACK.style.opacity = '0';
+    else requestAnimationFrame(() => { BLACK.style.transition = 'opacity 1.6s ease'; BLACK.style.opacity = '0'; });
+    clearTimeout(window.__bootTimer);
+    base0 = performance.now();
+    requestAnimationFrame(frame);
+  } catch (e) {
+    console.error(e);
+    window.__showError('Rendering failed to start: ' + (e && e.message ? e.message : e));
+  }
+}).catch(e => { console.error(e); window.__showError('Textures failed to load: ' + (e && e.message ? e.message : e)); });
+</script>
+</body>
+</html>

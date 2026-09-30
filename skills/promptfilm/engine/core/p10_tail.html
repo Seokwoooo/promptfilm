@@ -1,0 +1,43 @@
+
+/* ---------- warm-up: compile every material and upload buffers before the first frame is shown ---------- */
+const BLACK = document.getElementById('black');
+function warmup() {
+  renderer.compile(scene, camera);
+  const taus = typeof WARMUP_TAUS !== 'undefined' ? WARMUP_TAUS : [];
+  [...taus.map(tau => WARP.toT(tau)), startT].forEach(tp => renderAt(tp));
+}
+// fonts: every string the film shows, loaded before the first frame. Google Fonts splits a script into subsets that download only
+// when their characters first appear, so without this a caption's first showing flashes in a fallback face (and a recording shows it)
+function loadFonts() {
+  if (!document.fonts || !document.fonts.load) return null;
+  try {
+  const panel = [];                                                  // the human-scale panel's lines, sampled over the loop
+  if (typeof SCALE_PANEL === 'function') for (let i = 0; i <= 48; i++) { const tau = LOOP_T * i / 48; placeCamera(tau);
+    const p = SCALE_PANEL(fieldNow(), tau); if (p) panel.push(p.k, p.v, p.r, p.n); }
+  const text = [...panel, ...CAPS.flat(), ...TAGS_DEF.flatMap(d => [d.en, d.ko]), ...LEADER_DEF.flatMap(d => [d.en, d.ko]),
+    ...CALLOUTS.flatMap(c => [c.big, c.sub, c.ko]), ...(HAS_RULER ? RULER.ticks.map(k => k[1]) : []), document.getElementById('hud-title').textContent,
+    '0123456789 ≈×·.,:%–—()'].filter(x => typeof x === 'string' && x).join(' ');
+  const root = getComputedStyle(document.documentElement), lang = root.getPropertyValue('--face-lang').trim();
+  const faces = ['600 20px Barlow', '500 20px Barlow', '500 20px "Barlow Semi Condensed"', ...(lang && lang !== 'sans-serif' ? [`500 20px ${lang}`] : [])];
+  return Promise.all(faces.map(f => document.fonts.load(f, text).catch(() => null))).then(() => document.fonts.ready);
+  } catch (e) { console.warn('font preload skipped: ' + e.message); return null; }
+}
+// (offline or blocked fonts: start anyway after 8 s, with fallback faces)
+Promise.resolve(typeof READY !== 'undefined' ? READY : null).then(() => Promise.race([loadFonts(), new Promise(r => setTimeout(r, 8000))])).then(() => {
+  try {
+    warmup();
+    window.__started = true;
+    // the one fade from black, on first start only (the loop itself never goes to black)
+    if (params.has('freeze')) BLACK.style.opacity = '0';
+    else requestAnimationFrame(() => { BLACK.style.transition = 'opacity 1.2s ease'; BLACK.style.opacity = '0'; });
+    clearTimeout(window.__bootTimer);
+    base0 = performance.now();
+    requestAnimationFrame(frame);
+  } catch (e) {
+    console.error(e);
+    window.__showError('Rendering failed to start: ' + (e && e.message ? e.message : e));
+  }
+}).catch(e => { console.error(e); window.__showError('Loading failed: ' + (e && e.message ? e.message : e)); });
+</script>
+</body>
+</html>
