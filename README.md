@@ -5,7 +5,7 @@
 **One sentence in. A researched 3D motion graphic out.**
 
 A [Claude Code](https://claude.com/claude-code) skill that turns a request into a real-time 3D film —<br>
-one self-contained HTML file that loops seamlessly and exports as a frame-exact MP4.
+one self-contained HTML file that loops seamlessly and exports to a frame-exact MP4.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-3b82f6)](LICENSE)
 [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#install)
@@ -28,24 +28,39 @@ In Claude Code:
 /plugin install promptfilm@promptfilm
 ```
 
-Restart Claude Code (or run `/reload-plugins`), then just ask:
+Restart Claude Code (or run `/reload-plugins`). You also need Node.js 20+, ffmpeg and Chrome — see [Requirements](#requirements).
+
+Then type one line. That's all it takes:
+
+**A journey through scale**
 
 ```
-Make a motion graphic that zooms from a grain of sand out to the whole Sahara
+Make a motion graphic that zooms out from Earth to the observable universe
 ```
 
-You also need Node.js 20+, ffmpeg and Chrome — see [Requirements](#requirements).
+**How something works**
+
+```
+Make a motion graphic showing how a mechanical watch works, from the mainspring to the hands
+```
+
+**A product ad**
+
+```
+Make an ad-style motion graphic for AirPods Pro 3
+```
 
 ## What you get
 
 - **A real film, not a slideshow** — real-time Three.js in one HTML file: studio light, physically based materials, one continuous
   camera, a seamless loop.
-- **Researched, not guessed** — facts, photos and footage from the web. Every number on screen has a source; anything that isn't
-  public is drawn as illustrative and labelled so.
-- **Paced to be watched** — everything a caption names gets a stop: the camera arrives, holds while you read, then moves on gently.
+- **Researched, not guessed** — facts, photos and footage from the web. Every number on screen has a source, and anything that
+  isn't public is marked as illustrative.
+- **Paced to be watched** — the camera stops at everything a caption names, holds while you read, then moves on gently.
 - **Any subject, any format** — journeys through scale, product ads, app and game demos, explainers, recreations of famous scenes,
   logo stings, data stories. 9:16 for Shorts, Reels and TikTok, or 16:9, 1:1, 4:5. Captions in one or two languages.
-- **Checked before it's called done** — automated QA, a visual review by a fresh subagent, and a delivery gate.
+- **Checked before it's called done** — automated QA, a visual review by a separate agent that didn't build the film, and a final
+  delivery check.
 - **A Studio to review it** — scrub the film, comment on the frame, change the pace, export the MP4.
 
 <div align="center">
@@ -60,8 +75,8 @@ You also need Node.js 20+, ffmpeg and Chrome — see [Requirements](#requirement
 | 1 | **Ask** | One kickoff question: research depth, aspect, loop length, caption languages. Then it works on its own. |
 | 2 | **Research** | Sourced facts, reference photos, frames from reference videos. |
 | 3 | **Storyboard** | Scene cards with a time budget, opened in the Studio for your approval. |
-| 4 | **Build** | The film is written on the bundled engine. |
-| 5 | **Check** | QA, a fresh-eyes review and the gate — fix and repeat until the gate says READY. |
+| 4 | **Build** | Claude writes the film on the bundled engine. |
+| 5 | **Check** | Automated QA, a fresh-eyes review and a final gate. It fixes and re-checks until the gate says READY. |
 | 6 | **Deliver** | The HTML (every version kept) and, when you want it, a 1080p 60 fps MP4. |
 
 > [!NOTE]
@@ -92,7 +107,7 @@ Everything stays on your machine: the Studio listens on `127.0.0.1` only.
 | **Python 3** | a local static server |
 | **yt-dlp** *(optional)* | frames from reference videos |
 
-A GPU helps; without one, Chrome's software renderer is used, slowly. Developed and tested on macOS (Apple Silicon). Linux should
+A GPU helps; without one, Chrome falls back to software rendering, which is slow. Developed and tested on macOS (Apple Silicon). Linux should
 work; Windows is untested (WSL is the safer route).
 
 ## Install
@@ -133,7 +148,7 @@ Ask in your own words, in any language:
 ```
 A 30-second 16:9 explainer of how a jet engine works, captions in English only
 An ad-style product film for our app, 9:16
-우주 스케일 영상, 지구부터 관측 가능한 우주까지 확대하는 영상 html 만들어줘
+사람 몸에서 세포, DNA, 원자까지 확대해 들어가는 쇼츠 영상 만들어줘
 ```
 
 Follow-ups work too: *"open the Studio"*, *"apply my review comments"*, *"render the MP4"*.
@@ -143,8 +158,8 @@ Films are made in your working folder, one folder each (`./<film-name>/`). Your 
 
 ## Make it yours
 
-The default taste lives in [`skills/promptfilm/taste.md`](skills/promptfilm/taste.md): a creator making Shorts for a general audience —
-nothing pops in, subjects look real, every step is shown up close, the camera moves gently, nothing drags. Copy it to
+The default taste profile, [`skills/promptfilm/taste.md`](skills/promptfilm/taste.md), belongs to a creator making Shorts for a general
+audience: nothing pops in, subjects look real, every step is shown up close, the camera moves gently, and nothing drags. Copy it to
 `./.promptfilm/taste.md` (one project) or `~/.promptfilm/taste.md` (all projects) and change the format defaults, the pace, the look,
 the report labels, or the list of things that must never happen.
 
