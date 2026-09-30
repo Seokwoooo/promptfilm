@@ -15,7 +15,7 @@ import { once } from 'events';
 import http from 'http';
 import os from 'os';
 import { pathToFileURL } from 'url';
-import { open, realLogs, argv, has, fs, path } from './common.mjs';
+import { open, realLogs, argv, has, fs, path, ffmpegBin } from './common.mjs';
 import { gateStatus } from './gate.mjs';
 
 export const OUT_SIZES = { '9x16': [1080, 1920], '16x9': [1920, 1080], '1x1': [1080, 1080], '4x5': [1080, 1350] };
@@ -77,7 +77,7 @@ export async function render({ url, out, fps = 60, draft = false, text = true, l
     if (gateFile && seconds >= info.LOOP - 1e-3) { const g = gateStatus(gateFile); if (!g.ok) throw new Error(`NOT RENDERED — ${seconds} s is the whole loop, a final video, and build ${g.hash} is not ready:\n  - ${g.why.join('\n  - ')}`); }
     const total = seconds > 0 ? Math.max(1, Math.min(N * Math.max(1, loops), Math.round(seconds * fps))) : N * Math.max(1, loops);
     fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
-    ff = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y',
+    ff = spawn(ffmpegBin(), ['-hide_banner', '-loglevel', 'error', '-y',
       '-f', 'image2pipe', '-framerate', String(fps), '-c:v', draft ? 'mjpeg' : 'png', '-i', '-',
       '-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p,setparams=range=tv:color_primaries=bt709:color_trc=bt709:colorspace=bt709',
       '-c:v', 'libx264', '-preset', draft ? 'veryfast' : 'slow', '-crf', draft ? '20' : '14', '-x264-params', 'aq-mode=3',

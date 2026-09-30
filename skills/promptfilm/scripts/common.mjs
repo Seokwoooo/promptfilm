@@ -75,3 +75,4 @@ export const mkdir = d => { fs.mkdirSync(d, { recursive: true }); return d; };
 export const argv = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
 export const has = name => process.argv.includes('--' + name);
 export { fs, path };
+export { ffmpegBin } from './tools.mjs';       // ffmpeg: $FFMPEG, else on PATH, else the local copy setup.mjs installs

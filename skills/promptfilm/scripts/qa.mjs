@@ -6,7 +6,7 @@
 import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
-import { open, realLogs, seek, shot, decode, writePng, diff, mkdir, argv, fs, path } from './common.mjs';
+import { open, realLogs, seek, shot, decode, writePng, diff, mkdir, argv, fs, path, ffmpegBin } from './common.mjs';
 const SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const url = process.argv[2];
@@ -401,12 +401,12 @@ if (run('contact')) {
     const every2 = fs.readdirSync(dir).filter((f, i) => i % 2 === 0).map(f => path.join(dir, f));
     const listFile = path.join(out, 'list1s.txt'); fs.writeFileSync(listFile, every2.map(f => `file '${f}'`).join('\n'));
     const cols = 10, rows = Math.ceil(every2.length / cols);
-    execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listFile, '-vf', `scale=${tw}:${th},tile=${cols}x${rows}:padding=4:color=0x202020`, '-frames:v', '1', path.join(out, 'sheet_1s.png')]);
+    execFileSync(ffmpegBin(), ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listFile, '-vf', `scale=${tw}:${th},tile=${cols}x${rows}:padding=4:color=0x202020`, '-frames:v', '1', path.join(out, 'sheet_1s.png')]);
     sheets.push('sheet_1s.png');
     const all = fs.readdirSync(dir).map(f => path.join(dir, f));
     for (let s = 0; s * 40 < all.length; s++) {
       const part = all.slice(s * 40, s * 40 + 40), lf = path.join(out, `list05_${s}.txt`); fs.writeFileSync(lf, part.map(f => `file '${f}'`).join('\n'));
-      execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', lf, '-vf', `scale=${tw}:${th},tile=10x${Math.ceil(part.length / 10)}:padding=4:color=0x202020`, '-frames:v', '1', path.join(out, `sheet_05s_${s + 1}.png`)]);
+      execFileSync(ffmpegBin(), ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', lf, '-vf', `scale=${tw}:${th},tile=10x${Math.ceil(part.length / 10)}:padding=4:color=0x202020`, '-frames:v', '1', path.join(out, `sheet_05s_${s + 1}.png`)]);
       sheets.push(`sheet_05s_${s + 1}.png`);
     }
   } catch (e) { sheets.push('ffmpeg failed: ' + e.message.slice(0, 200)); }

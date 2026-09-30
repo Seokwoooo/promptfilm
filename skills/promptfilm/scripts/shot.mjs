@@ -2,7 +2,7 @@
 // (default size: the film's own aspect, common.mjs SIZES)
 // --sheet N also tiles all the shots into <out>/sheet.png, N per row (360 px wide each) — one image to look at instead of many.
 import { execFileSync } from 'child_process';
-import { open, realLogs, seek, shot, mkdir, argv, has, path, fs } from './common.mjs';
+import { open, realLogs, seek, shot, mkdir, argv, has, path, fs, ffmpegBin } from './common.mjs';
 const url = process.argv[2], out = mkdir(argv('out', 'shots'));
 const times = process.argv.slice(3).filter((a, i, all) => !a.startsWith('--') && !(all[i - 1] || '').match(/^--(out|w|h|dpr|sheet)$/)).map(Number);
 const q = '?freeze' + (has('safe') ? '&safe' : '') + (has('text0') ? '&text=0' : '');
@@ -17,6 +17,6 @@ const cols = +argv('sheet', 0);
 if (cols > 0 && files.length) {
   const list = path.resolve(out, 'sheet_list.txt'); fs.writeFileSync(list, files.map(f => `file '${f}'`).join('\n'));
   const tw = 360, th = Math.round(tw * VH / VW);
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-vf', `scale=${tw}:${th},tile=${cols}x${Math.ceil(files.length / cols)}:padding=4:color=0x202020`, '-frames:v', '1', path.resolve(out, 'sheet.png')]);
+  execFileSync(ffmpegBin(), ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-vf', `scale=${tw}:${th},tile=${cols}x${Math.ceil(files.length / cols)}:padding=4:color=0x202020`, '-frames:v', '1', path.resolve(out, 'sheet.png')]);
   console.log('sheet', path.resolve(out, 'sheet.png'));
 }

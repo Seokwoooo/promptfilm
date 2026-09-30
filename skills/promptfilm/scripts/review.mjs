@@ -9,7 +9,7 @@
 // An earlier qa/visual-review.md is moved to qa/reviews/ first (the gate keeps a failed build failed).
 import { execFileSync } from 'child_process';
 import { randomInt } from 'crypto';
-import { open, seek, shot, mkdir, argv, fs, path } from './common.mjs';
+import { open, seek, shot, mkdir, argv, fs, path, ffmpegBin } from './common.mjs';
 import { buildHash, codeHash, parseReview } from './gate.mjs';
 
 const url = process.argv[2];
@@ -73,7 +73,7 @@ for (let k = 0; k * per < times.length; k++) {
   }
   const list = path.join(out, 'sheets', `list${k}.txt`), name = `sheets/sheet_${String(k + 1).padStart(2, '0')}.jpg`;
   fs.writeFileSync(list, files.map(f => `file '${f}'`).join('\n'));
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-vf', `tile=${cols}x${Math.ceil(per / cols)}:padding=4:color=0x202020`, '-frames:v', '1', '-q:v', '3', path.join(out, name)]);
+  execFileSync(ffmpegBin(), ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list, '-vf', `tile=${cols}x${Math.ceil(per / cols)}:padding=4:color=0x202020`, '-frames:v', '1', '-q:v', '3', path.join(out, name)]);
   sheets.push({ name, from: part[0], to: part[part.length - 1], code: codeHash(code, hash) });
   files.forEach(f => fs.rmSync(f)); fs.rmSync(list);
 }

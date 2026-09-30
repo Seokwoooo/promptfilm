@@ -29,22 +29,29 @@ request), unless the profile says otherwise.
 `<skill>` below is this skill's folder (where this SKILL.md is). Work through the steps in order, with a one-line progress note to the
 requester at each step (a film takes hours; silence is worse).
 
-### 0. Environment notice (first, once per session)
+### 0. Setup and environment notice (first, once per session)
 
-Check that this is the recommended environment — Claude Code, Claude Opus 5.5, Sonnet 5.5 or Fable 5.1 or newer, effort medium or above:
+One command makes sure this machine can make films — installing what is missing — and checks that this is the recommended environment
+(Claude Code, Claude Opus 5.5, Sonnet 5.5 or Fable 5.1 or newer, effort medium or above):
 
 ```
-node <skill>/scripts/env_check.mjs --model <your exact model id> --lang ko|en      (ko for a Korean-speaking requester, else en)
+sh <skill>/scripts/setup.sh --model <your exact model id> --lang ko|en      (ko for a Korean-speaking requester, else en)
 ```
 
-Pass the model id your instructions give you (e.g. `claude-opus-5-5`); a model that isn't Claude passes its own name. In any host that is
-not Claude Code the notice always shows (the script tells the host from the processes that launched it). If it prints a ⚠️ notice, show it
-to the requester as it is (translated, when they speak neither Korean nor English), once, at the start of your first reply — then carry on
-normally: it is information for them, not a reason to stop, to ask, or to lower the bar. When everything matches, say nothing about it.
-Without a shell (another host), judge the same three things yourself and, if one fails, show the same one line in the requester's language:
-"⚠️ Not the recommended setup (Claude Code · Opus 5.5+ / Sonnet 5.5+ / Fable 5.1+ · effort medium+), so quality can't be guaranteed.
-(Now: <what differs>)" — in Korean: "⚠️ 권장 환경(Claude Code · Opus 5.5↑ / Sonnet 5.5↑ / Fable 5.1↑ · effort medium↑)이 아니라서 품질을
-보장할 수 없어요. (지금: <what differs>)"
+- **Setup** (setup.mjs): Node.js 20+ (installed with Homebrew when missing and Homebrew is there), the scripts' packages (npm), a Chrome
+  that runs headless (else Playwright's Chromium) and ffmpeg (else a local copy in the skill's node_modules) — nothing needs admin rights.
+  When everything is there it takes a second and prints `setup: ready — …`: say nothing about it. The first run on a machine may
+  download about 200 MB and take a few minutes (run it with a 10-minute timeout); tell the requester in one line that you are getting
+  the tools ready, and afterwards what was installed. When it ends with `SETUP MISSING …` lines, show them to the requester with the
+  command to run (they can type it with a `!` in front), wait until it is done, and run setup.sh again — no film can be made without them.
+- **Environment notice** (env_check.mjs, printed last): pass the model id your instructions give you (e.g. `claude-opus-5-5`); a model
+  that isn't Claude passes its own name. In any host that is not Claude Code the notice always shows (the script tells the host from the
+  processes that launched it). If it prints a ⚠️ notice, show it to the requester as it is (translated, when they speak neither Korean
+  nor English), once, at the start of your first reply — then carry on normally: it is information for them, not a reason to stop, to
+  ask, or to lower the bar. When everything matches, say nothing about it. Without a shell (another host), judge the same three things
+  yourself and, if one fails, show the same one line in the requester's language: "⚠️ Not the recommended setup (Claude Code · Opus
+  5.5+ / Sonnet 5.5+ / Fable 5.1+ · effort medium+), so quality can't be guaranteed. (Now: <what differs>)" — in Korean: "⚠️ 권장
+  환경(Claude Code · Opus 5.5↑ / Sonnet 5.5↑ / Fable 5.1↑ · effort medium↑)이 아니라서 품질을 보장할 수 없어요. (지금: <what differs>)"
 
 ### 1. Read and understand
 
@@ -112,10 +119,9 @@ Skip it only when the taste profile says so or the request asks to start at once
   moves, explaining one thing — the stop (§21), exploded views, characters, lettering; with pointers into `examples/` and `engine/demo*`).
 - Model everything to the quality bar (P29): real proportions, bevels / seams / labels, surface micro-structure, physically based materials in
   studio light. Nothing may look like a mock-up — not even in a test.
-- Tools: Node.js 20+, ffmpeg on PATH, and Chrome or Chromium (`npx playwright install chromium` if none is found). The scripts' packages
-  (playwright-core, pngjs) come with the plugin install; when a script stops with `Cannot find package 'playwright-core'` (the skill was
-  copied into a skills folder by hand), run `cd <skill>/scripts && npm install` once. On a new machine, `node <skill>/scripts/selftest.mjs`
-  checks the whole toolchain, the checks catching planted faults included (≈10 min).
+- Tools: step 0's setup.sh made sure of them. If a script later can't find one (`Cannot find package …`, no Chrome, no ffmpeg), run
+  setup.sh again. `node <skill>/scripts/selftest.mjs` checks the whole toolchain on a machine, the checks catching planted faults
+  included (≈10 min).
 - Write the world in `parts/p3_*.js` … `p6_*.js` and the timeline in `parts/p8_*.js`; edit the title and header comment in `p1_head.html`
   (story, data sources, look, what is illustrative, pacing, keys). Split long code over several files and writes.
 - Author in τ, then mark every stretch with a beat (`hook`, `key`, `normal`, `transit`, `return`) — the engine plays them at the taste
@@ -132,7 +138,7 @@ Skip it only when the taste profile says so or the request asks to start at once
 - Captions and labels in the kickoff languages: first language for titles and lines, the second (if any) in parentheses in plain words.
 - Every number on screen comes from FACTS (from research/facts.md), with its source; derived totals are asserted.
 - Build with `node <film>/build.mjs` (or `sh <film>/build.sh`; it stops if a film name repeats an engine name — all parts share one scope); serve the parent
-  folder over http (`python3 -m http.server 8765 --bind 127.0.0.1`); run `node <skill>/scripts/qa.mjs <url> --out <film>/qa --only
+  folder over http (`node <skill>/scripts/serve.mjs <parent-folder> --port 8765`, in the background); run `node <skill>/scripts/qa.mjs <url> --out <film>/qa --only
   load,engine,err,pace,read,empty,surfaces` after every significant change (a minute or two). Look while building: `node <skill>/scripts/shot.mjs <url> --out <dir> --sheet 4 t1 t2 …`
   gives one tiled image of chosen moments. (The scripts open the film at its own aspect and take the length target from it.)
 - Back up parts before a large change (`parts/v<N>/`).
@@ -227,11 +233,12 @@ before delivering. And never call a film finished, or render its final video, be
 | engine/build_demo.sh | test films for the engine and QA: a journey (demo) and a product film at the quality bar (demo-ad) |
 | scripts/video_refs.sh | reference frames from a video (a scene to recreate, an ad, a demo): contact sheets + key frames |
 | scripts/flicker_probe.mjs | what flickers at one moment and which kind (nondeterministic / static / motion stepping), by group |
-| scripts/embed_assets.py | packing found or supplied images / models into the film |
+| scripts/embed_assets.mjs | packing found or supplied images / models into the film |
+| scripts/serve.mjs | the local http server QA and rendering open films from (127.0.0.1 only) |
 | studio/server.mjs | the Studio: a local page to play, scrub, comment and render; opens itself on `--film` (references/studio.md) |
 | scripts/render.mjs | the MP4 (or one frame as PNG), frame-exact and deterministic; a final video only of a build the gate calls READY |
 | scripts/budget.mjs | step 4: does the storyboard fit the length with every card a real stop? |
 | scripts/ship.mjs | step 6: build → full QA → the review's material and brief → the gate, in one command |
 | scripts/review.mjs · scripts/gate.mjs | step 6: the visual review's material · is this build READY (full QA + visual review)? |
-| scripts/env_check.mjs | step 0: is this the recommended environment (host, model, effort)? prints the notice when not |
+| scripts/setup.sh | step 0: installs what this machine is missing (setup.mjs), then the environment notice (env_check.mjs: host, model, effort) |
 | scripts/selftest.mjs | after changing the engine, the scripts or the Studio (and on a new machine): the skill checks itself end to end |

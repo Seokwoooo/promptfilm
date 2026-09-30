@@ -70,19 +70,19 @@
     {
       "id": 12,
       "prompt": "(running on claude-sonnet-5 in Claude Code) 우주 스케일 영상 html 만들어줘",
-      "expected_output": "Runs scripts/env_check.mjs --model claude-sonnet-5 --lang ko first and shows its ⚠️ notice once at the start of the first reply (quality can't be guaranteed: model below Opus 5.5 / Sonnet 5.5 / Fable 5.1), then continues with the normal workflow (kickoff question, research, build) without lowering the bar or asking whether to continue.",
+      "expected_output": "Runs scripts/setup.sh --model claude-sonnet-5 --lang ko first and shows its ⚠️ notice once at the start of the first reply (quality can't be guaranteed: model below Opus 5.5 / Sonnet 5.5 / Fable 5.1), then continues with the normal workflow (kickoff question, research, build) without lowering the bar or asking whether to continue.",
       "files": []
     },
     {
       "id": 13,
       "prompt": "(running in a coding agent other than Claude Code) 우리 제품 광고 모션그래픽 만들어줘",
-      "expected_output": "Shows the notice (Claude Code가 아닌 환경 — 품질 보장 불가) once at the start — via env_check.mjs --lang ko if it can run it, else judging host/model itself and writing the same notice in Korean — then proceeds normally.",
+      "expected_output": "Shows the notice (Claude Code가 아닌 환경 — 품질 보장 불가) once at the start — via setup.sh --lang ko if it can run it, else judging host/model itself and writing the same notice in Korean — then proceeds normally.",
       "files": []
     },
     {
       "id": 14,
       "prompt": "(running on claude-opus-5-5 in Claude Code, effort high) 블랙홀 모션그래픽 만들어줘",
-      "expected_output": "Runs env_check.mjs, which reports the recommended environment; says nothing about the environment to the requester and starts the kickoff question.",
+      "expected_output": "Runs setup.sh, which prints 'setup: ready' and reports the recommended environment; says nothing about either to the requester and starts the kickoff question.",
       "files": []
     },
     {
@@ -136,13 +136,25 @@
     {
       "id": 23,
       "prompt": "(running on claude-sonnet-5-5 in Claude Code, effort medium) 제트엔진 내부 모션그래픽 만들어줘",
-      "expected_output": "Runs env_check.mjs --model claude-sonnet-5-5 --lang ko, which reports the recommended environment (Sonnet 5.5 is recommended, like Opus 5.5 and Fable 5.1 or newer); says nothing about the environment to the requester and starts the kickoff question.",
+      "expected_output": "Runs setup.sh --model claude-sonnet-5-5 --lang ko, which reports the recommended environment (Sonnet 5.5 is recommended, like Opus 5.5 and Fable 5.1 or newer); says nothing about the environment to the requester and starts the kickoff question.",
       "files": []
     },
     {
       "id": 24,
       "prompt": "(running on claude-opus-5-5 in Claude Code, effort high) Make a motion graphic that zooms from a grain of sand out to the whole Sahara",
-      "expected_output": "Talks to the requester in English throughout. Runs env_check.mjs --model claude-opus-5-5 --lang en (recommended environment: says nothing about it). The kickoff question is in English, and its caption-language question recommends English only first (the default taste: English + the requester's language); saves the answers to ./.promptfilm/settings.json. The film's captions and labels follow the answer (no parenthesised Korean line for English only). The final report uses the English labels **Bottom line:** / **What changed** / **Checks** / **Limits** / **Files**, and Checks starts with the gate line.",
+      "expected_output": "Talks to the requester in English throughout. Runs setup.sh --model claude-opus-5-5 --lang en (recommended environment: says nothing about it). The kickoff question is in English, and its caption-language question recommends English only first (the default taste: English + the requester's language); saves the answers to ./.promptfilm/settings.json. The film's captions and labels follow the answer (no parenthesised Korean line for English only). The final report uses the English labels **Bottom line:** / **What changed** / **Checks** / **Limits** / **Files**, and Checks starts with the gate line.",
+      "files": []
+    },
+    {
+      "id": 25,
+      "prompt": "(a machine with Node.js but no ffmpeg, no Chrome and no npm packages yet) /promptfilm 블랙홀 모션그래픽 만들어줘",
+      "expected_output": "Runs sh scripts/setup.sh --model … --lang ko first, with a long timeout, telling the requester in one line that it is getting the tools ready. setup installs the npm packages, Playwright's Chromium and a local ffmpeg (ffmpeg-static) without admin rights and ends 'setup: ready'; the reply says in one line what was installed, then continues with the kickoff question. Nothing is installed with sudo; nothing of the user's is removed.",
+      "files": []
+    },
+    {
+      "id": 26,
+      "prompt": "(a machine without Node.js and without Homebrew) /promptfilm 우주 스케일 영상 만들어줘",
+      "expected_output": "setup.sh ends with 'SETUP MISSING node …' and the way to install Node.js for this OS; the reply shows that line and the command in Korean, asks the requester to install it (or run it with a leading !), waits, and runs setup.sh again before any film work.",
       "files": []
     }
   ]

@@ -28,7 +28,8 @@ In Claude Code:
 /plugin install promptfilm@promptfilm
 ```
 
-Restart Claude Code (or run `/reload-plugins`). You also need Node.js 20+, ffmpeg and Chrome — see [Requirements](#requirements).
+Restart Claude Code (or run `/reload-plugins`). The only thing to install yourself is [Node.js](https://nodejs.org) 20 or newer: the
+first run checks for everything else and installs what's missing (see [Requirements](#requirements)).
 
 Then type `/promptfilm` and what you want. One line is enough:
 
@@ -98,16 +99,17 @@ Everything stays on your machine: the Studio listens on `127.0.0.1` only.
 
 ## Requirements
 
-| Tool | Used for |
+| What | How you get it |
 |---|---|
 | **Claude Code** | Recommended: Claude Opus 5.5, Sonnet 5.5 or Fable 5.1 (or newer), effort medium or above. Elsewhere it still runs and says once that quality can't be guaranteed. |
-| **Node.js 20+** | the scripts |
-| **ffmpeg** | video encoding |
-| **Chrome or Chromium** | QA and rendering — or `npx playwright install chromium` |
-| **Python 3** | a local static server |
-| **yt-dlp** *(optional)* | frames from reference videos |
+| **Node.js 20+** | Install it yourself from [nodejs.org](https://nodejs.org). If it's missing and you have Homebrew, the first run installs it. |
+| **The scripts' packages** | Installed with the plugin, or by the first run |
+| **A headless Chrome** | Your Chrome, if it runs headless; otherwise the first run installs Playwright's Chromium (~150 MB) |
+| **ffmpeg** | Yours, if it's on your PATH; otherwise the first run downloads a copy just for the skill (~45 MB) |
+| **yt-dlp** *(optional)* | Frames from reference videos: `brew install yt-dlp` or `pipx install yt-dlp` |
 
-A GPU helps; without one, Chrome falls back to software rendering, which is slow. Developed and tested on macOS (Apple Silicon). Linux should
+The first run's setup needs no admin rights and removes nothing; after that, the check takes about a second. A GPU helps: without one,
+Chrome falls back to software rendering, which is slow. Developed and tested on macOS (Apple Silicon). Linux should
 work; Windows is untested (WSL is the safer route).
 
 ## Install
@@ -131,10 +133,9 @@ claude plugin marketplace update promptfilm && claude plugin update promptfilm@p
 ```sh
 git clone https://github.com/Seokwoooo/promptfilm.git
 cp -R promptfilm/skills/promptfilm ~/.claude/skills/
-cd ~/.claude/skills/promptfilm/scripts && npm install
 ```
 
-The skill is then `/promptfilm`.
+The skill is then `/promptfilm`, and its first run installs the packages.
 
 ### Check your setup
 
@@ -167,9 +168,10 @@ the report labels, or the list of things that must never happen.
 
 | Message | Fix |
 |---|---|
-| `Chrome not found` | `npx playwright install chromium`, or set `CHROME=/path/to/chrome` |
-| `Cannot find package 'playwright-core'` | a hand-copied skill: run `npm install` in its `scripts/` folder |
-| `ffmpeg: command not found` | install ffmpeg (`brew install ffmpeg`, `sudo apt install ffmpeg` …) |
+| `SETUP MISSING node` | Install Node.js 20+ from [nodejs.org](https://nodejs.org), then run `/promptfilm` again |
+| `SETUP MISSING …` (anything else) | The line says what failed and the command that fixes it; usually the network. Run `/promptfilm` again afterwards |
+| `Chrome not found`, `Cannot find package …` | Something was removed after the first run: run `/promptfilm` again and the setup reinstalls it |
+| Using your own tools | Set `CHROME=/path/to/chrome` or `FFMPEG=/path/to/ffmpeg` |
 | QA or rendering is very slow | no GPU: Chrome falls back to software rendering — it works, just slower |
 | ⚠️ *Not the recommended setup* | shown once when the host, model or effort differs; the skill carries on |
 
@@ -182,7 +184,7 @@ skills/promptfilm/
 ├── taste.md             the default taste profile
 ├── references/          principles, pacing, layout, engine API, techniques, QA, review, Studio
 ├── engine/              the film engine: core, a new-film template, two test films
-├── scripts/             new film, build, QA, time budget, render, review, gate, selftest
+├── scripts/             setup, new film, build, QA, time budget, render, review, gate, selftest
 ├── studio/              the local Studio
 ├── examples/            code from the two reference films (patterns, not templates)
 └── evals/               test prompts with the expected behaviour

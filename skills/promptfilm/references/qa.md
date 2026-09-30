@@ -5,11 +5,10 @@ Nothing is "done" until it is measured. Report only measured numbers; anything n
 ## 1. Setup (once per machine)
 
 ```bash
-cd <skill>/scripts && npm install            # playwright-core, pngjs
-npx playwright install chromium              # only if Chrome for Testing is missing (common.mjs finds it in ~/Library/Caches/ms-playwright)
-python3 -m http.server 8765 --bind 127.0.0.1 # from a folder above the film (module scripts + importmap need http://)
+sh <skill>/scripts/setup.sh                            # once per session: the packages, a Chrome, ffmpeg — installed when missing
+node <skill>/scripts/serve.mjs <parent> --port 8765   # in the background, from a folder above the film (module scripts need http://)
 ```
-ffmpeg is used for contact sheets (`brew install ffmpeg` if missing).
+ffmpeg makes the contact sheets: the one on PATH, else the skill's local copy (setup.sh).
 
 ## 2. Run
 

@@ -4,14 +4,14 @@
 // frame-exact rendering, live pace, the Studio (films, pace edits, comments + snapshots, opening the page, Send to Claude reaching the
 // right session, the storyboard).
 //   node selftest.mjs [--keep]          (about 10 minutes with a GPU — two full QA runs; exit code 0 = every check passed)
-// Needs: `npm install` here, Chrome (findChrome in common.mjs), ffmpeg on PATH. Writes nothing inside the skill.
+// Needs what `sh setup.sh` installs (the packages, a Chrome, an ffmpeg). Writes nothing inside the skill.
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import http from 'http';
 import { spawn, execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
-import { open, exePath, has } from './common.mjs';
+import { open, exePath, has, ffmpegBin } from './common.mjs';
 import { build } from '../engine/build.mjs';
 
 const SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,7 +21,7 @@ const check = (name, pass, detail) => { rows.push([pass ? 'pass' : 'FAIL', name,
 const step = async (name, fn) => { try { await fn(); } catch (e) { check(name, false, e.message.split('\n')[0].slice(0, 240)); } };
 const run = (cmd, args, opts = {}) => new Promise((res) => { const p = spawn(cmd, args, { ...opts }); let out = ''; p.stdout && p.stdout.on('data', d => out += d); p.stderr && p.stderr.on('data', d => out += d); p.on('exit', code => res({ code, out })); });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const md5s = file => execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-f', 'framemd5', '-'], { encoding: 'utf8' }).split('\n').filter(l => l && !l.startsWith('#')).map(l => l.split(',').pop().trim());
+const md5s = file => execFileSync(ffmpegBin(), ['-hide_banner', '-loglevel', 'error', '-i', file, '-f', 'framemd5', '-'], { encoding: 'utf8' }).split('\n').filter(l => l && !l.startsWith('#')).map(l => l.split(',').pop().trim());
 
 // a static server for the temporary folder (QA and the renderer open films over http)
 function serve(root) {
@@ -37,7 +37,7 @@ console.log(`promptfilm selftest · ${os.platform()}/${os.arch()} · node ${proc
 let web = null, studio = null;
 try {
   await step('environment', async () => {
-    const ff = execFileSync('ffmpeg', ['-hide_banner', '-version'], { encoding: 'utf8' }).split('\n')[0].slice(0, 40);
+    const ff = execFileSync(ffmpegBin(), ['-hide_banner', '-version'], { encoding: 'utf8' }).split('\n')[0].slice(0, 40);
     check('environment', true, `chrome ${path.basename(exePath())} · ${ff}`);
   });
   // the environment notice: run under another coding agent — even one started from a Claude Code terminal, which inherits
@@ -49,6 +49,19 @@ try {
     if (process.platform === 'win32') return check('env notice elsewhere', true, 'skipped on Windows (no process tree via ps)');
     const r = await run(fake, ['claude-opus-5-5'], { env: { ...process.env, CLAUDECODE: '1' } }), j = JSON.parse(r.out);
     check('env notice elsewhere', j.host === 'gemini' && j.recommended === false, `under another agent (CLAUDECODE=1 inherited, a Claude model id): host ${j.host} · notice ${j.recommended ? 'NOT shown' : 'shown'}`);
+  });
+
+  // setup: this machine has what the skill needs (report only — the selftest installs nothing), and serve.mjs serves a folder
+  await step('setup + serve', async () => {
+    const r = await run(process.execPath, [path.join(SKILL, 'scripts', 'setup.mjs'), '--check']);
+    fs.writeFileSync(path.join(TMP, 'probe.html'), '<!doctype html><title>probe</title>');
+    const sp = 49000 + Math.floor(Math.random() * 900), srv = spawn(process.execPath, [path.join(SKILL, 'scripts', 'serve.mjs'), TMP, '--port', String(sp)], { stdio: 'ignore' });
+    let got = null, type = null, outside = null;
+    for (let i = 0; i < 40 && got === null; i++) { await sleep(150); try { const q = await fetch(`http://127.0.0.1:${sp}/probe.html`); type = q.headers.get('content-type'); got = await q.text(); } catch (e) {} }
+    try { outside = (await fetch(`http://127.0.0.1:${sp}/%2e%2e/%2e%2e/etc/hosts`)).status; } catch (e) {}
+    srv.kill();
+    check('setup + serve', r.code === 0 && /setup: ready/.test(r.out) && /probe/.test(got || '') && /text\/html/.test(type || '') && outside >= 400,
+      `${r.out.trim().split('\n').pop().slice(0, 120)} · serve.mjs: ${got ? 'served' : 'NOT served'} (${type}) · outside the folder → ${outside}`);
   });
 
   // 1) new_film.mjs + build.mjs; the engine's two test films built with the node build

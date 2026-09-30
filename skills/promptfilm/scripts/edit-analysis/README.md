@@ -5,7 +5,7 @@ skill can learn from it (references/pacing.md §4).
 
 1. Find the rectangle of the video that shows the film (a screen recording has browser chrome and maybe a banner):
    `ffmpeg -ss 10 -i video.mp4 -frames:v 1 frame.png` and look at it; note W:H:X:Y of the film area.
-2. Serve the film (`python3 -m http.server 8765` in its folder's parent) and run
+2. Serve the film (`node <skill>/scripts/serve.mjs <its folder's parent> --port 8765`, in the background) and run
    `uv run --with numpy --with pillow python analyze.py video.mp4 http://127.0.0.1:8765/…/film.html out/ --crop W:H:X:Y`
 3. Read `out/report.md`: each segment's speed and the film beats it covers. Compare with the beats' kinds.
 

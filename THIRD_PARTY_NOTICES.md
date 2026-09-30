@@ -11,8 +11,10 @@ Promptfilm's own code, documents and images are under the MIT License (see `LICE
 | [Barlow, Barlow Semi Condensed](https://fonts.google.com/specimen/Barlow), [Noto Sans KR / JP / SC …](https://fonts.google.com/noto), from Google Fonts | captions and labels | SIL Open Font License 1.1 |
 | [playwright-core](https://github.com/microsoft/playwright) | QA, rendering, the Studio's snapshots (installed with npm) | Apache-2.0 |
 | [pngjs](https://github.com/pngjs/pngjs) | QA image analysis (installed with npm) | MIT |
+| [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static) and the FFmpeg build it downloads | video encoding — only on a machine without ffmpeg on its PATH; downloaded by the first run's setup, not included here | GPL-3.0-or-later (the build: GPL) |
+| [Chromium](https://www.chromium.org), via Playwright | QA and rendering — only when no installed Chrome runs headless; downloaded by the first run's setup | BSD-3-Clause and others (Chromium's own notices) |
 
-The films are drawn by Chrome; videos are encoded by your own ffmpeg; reference clips are downloaded by your own yt-dlp (optional).
+The films are drawn by Chrome and encoded by ffmpeg (yours, or the copy above); reference clips are downloaded by your own yt-dlp (optional).
 
 ## Imagery in `skills/promptfilm/references/review-examples/`
 

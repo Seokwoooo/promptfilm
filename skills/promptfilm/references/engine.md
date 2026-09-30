@@ -81,7 +81,7 @@ All times are authored τ at a comfortable pace; positions in world units.
   sweep, a colour, an opacity. Eases: `smooth` (default), `linear`, `in`, `out`, `hold`. Make every tweened value end where it started when
   the loop closes.
 - Assets: `loadTextureData(dataUrl)`, `loadGLBData(dataUrl)` (promises; put them in READY) for files packed by
-  `scripts/embed_assets.py`; `studioEnv()` → a soft studio environment map for reflections (`scene.environment = studioEnv()`).
+  `scripts/embed_assets.mjs`; `studioEnv()` → a soft studio environment map for reflections (`scene.environment = studioEnv()`).
   Core imports include GLTFLoader, RoomEnvironment, RoundedBoxGeometry and BokehPass; add others (FontLoader + TextGeometry, Line2…) to the
   film's `p1_head.html`.
 - There is no cut: the camera is always continuous (P24); QA `continuity` fails on a jump.

@@ -28,8 +28,8 @@ Claude Code에서:
 /plugin install promptfilm@promptfilm
 ```
 
-Claude Code를 다시 시작하거나 `/reload-plugins`를 실행하세요. Node.js 20 이상, ffmpeg, Chrome도 필요해요. 자세한 내용은
-[필요한 것](#필요한-것)에 있어요.
+Claude Code를 다시 시작하거나 `/reload-plugins`를 실행하세요. 직접 설치할 건 [Node.js](https://nodejs.org) 20 이상뿐이에요. 나머지는
+첫 실행 때 알아서 확인하고, 없으면 설치해요(자세한 내용은 [필요한 것](#필요한-것)에 있어요).
 
 그다음엔 `/promptfilm` 뒤에 원하는 걸 한 줄로 적으면 돼요.
 
@@ -99,15 +99,16 @@ Studio는 내 컴퓨터(`127.0.0.1`)에서만 열려서, 밖에서는 접근할 
 
 ## 필요한 것
 
-| 도구 | 용도 |
+| 무엇 | 준비 방법 |
 |---|---|
 | **Claude Code** | 권장: Claude Opus 5.5, Sonnet 5.5, Fable 5.1(또는 그보다 새 버전), effort medium 이상. 다른 환경에서도 돌아가지만, 품질을 보장할 수 없다고 처음에 한 번 알려 줘요. |
-| **Node.js 20 이상** | 스크립트 실행 |
-| **ffmpeg** | 영상 인코딩 |
-| **Chrome 또는 Chromium** | 검사와 렌더링. 없으면 `npx playwright install chromium` |
-| **Python 3** | 영상을 띄우는 로컬 서버 |
-| **yt-dlp** *(선택)* | 참고 영상에서 장면 추출 |
+| **Node.js 20 이상** | [nodejs.org](https://nodejs.org)에서 직접 설치하세요. 없는데 Homebrew가 있으면 첫 실행 때 알아서 설치해요. |
+| **스크립트 패키지** | 플러그인을 설치할 때, 또는 첫 실행 때 자동으로 깔려요 |
+| **헤드리스 Chrome** | 쓰던 Chrome이 헤드리스로 돌면 그대로 쓰고, 아니면 첫 실행 때 Playwright의 Chromium을 받아요(약 150MB) |
+| **ffmpeg** | PATH에 있으면 그걸 쓰고, 없으면 첫 실행 때 스킬 전용 ffmpeg를 받아요(약 45MB) |
+| **yt-dlp** *(선택)* | 참고 영상에서 장면을 뽑을 때만 필요해요. `brew install yt-dlp` 또는 `pipx install yt-dlp` |
 
+첫 실행 때의 설치는 관리자 권한이 필요 없고, 기존에 깔린 건 아무것도 지우지 않아요. 그다음부터는 확인이 1초쯤이면 끝나요.
 GPU가 있으면 좋아요. 없어도 돌아가지만, Chrome이 소프트웨어 렌더링으로 그려서 느려요. macOS(Apple Silicon)에서 개발하고
 검증했어요. Linux에서도 될 거예요. Windows에서는 확인하지 못해서 WSL을 권해요.
 
@@ -132,10 +133,9 @@ claude plugin marketplace update promptfilm && claude plugin update promptfilm@p
 ```sh
 git clone https://github.com/Seokwoooo/promptfilm.git
 cp -R promptfilm/skills/promptfilm ~/.claude/skills/
-cd ~/.claude/skills/promptfilm/scripts && npm install
 ```
 
-이렇게 설치하면 스킬 이름은 `/promptfilm`이에요.
+이렇게 설치하면 스킬 이름은 `/promptfilm`이고, 필요한 패키지는 첫 실행 때 깔려요.
 
 ### 설치 확인
 
@@ -175,9 +175,10 @@ Claude Code에 "promptfilm 셀프테스트 돌려줘"라고 하세요. 10분쯤 
 
 | 메시지 | 해결 |
 |---|---|
-| `Chrome not found` | `npx playwright install chromium`을 실행하거나 `CHROME=/path/to/chrome`을 지정하세요 |
-| `Cannot find package 'playwright-core'` | 직접 복사해서 설치한 경우예요. 스킬의 `scripts/` 폴더에서 `npm install`을 실행하세요 |
-| `ffmpeg: command not found` | ffmpeg를 설치하세요 (`brew install ffmpeg`, `sudo apt install ffmpeg` 등) |
+| `SETUP MISSING node` | [nodejs.org](https://nodejs.org)에서 Node.js 20 이상을 설치한 뒤 `/promptfilm`을 다시 실행하세요 |
+| `SETUP MISSING …` (그 밖의 것) | 무엇이 실패했는지와 해결 명령이 함께 나와요. 대개 네트워크 문제예요. 해결한 뒤 `/promptfilm`을 다시 실행하세요 |
+| `Chrome not found`, `Cannot find package …` | 첫 실행 뒤에 뭔가 지워진 경우예요. `/promptfilm`을 다시 실행하면 알아서 다시 깔아요 |
+| 내 도구를 쓰고 싶어요 | `CHROME=/path/to/chrome`이나 `FFMPEG=/path/to/ffmpeg`를 지정하세요 |
 | 검사나 렌더링이 아주 느려요 | GPU 없이 소프트웨어 렌더링으로 그리는 중이에요. 느려도 결과는 같아요 |
 | ⚠️ *권장 환경이 아니라서…* | 호스트, 모델, effort가 권장과 다를 때 한 번 나오는 안내예요. 스킬은 그대로 진행돼요 |
 
@@ -190,7 +191,7 @@ skills/promptfilm/
 ├── taste.md             기본 취향 프로필
 ├── references/          원칙, 속도, 레이아웃, 엔진 API, 기법, 검사, 검수, Studio
 ├── engine/              영상 엔진: 코어, 새 영상 템플릿, 테스트 영상 두 편
-├── scripts/             새 영상, 빌드, 검사, 시간 예산, 렌더, 검수, 판정, 셀프테스트
+├── scripts/             설치 점검, 새 영상, 빌드, 검사, 시간 예산, 렌더, 검수, 판정, 셀프테스트
 ├── studio/              로컬 Studio
 ├── examples/            기준 영상 두 편의 코드 (템플릿이 아니라 구현 참고용)
 └── evals/               테스트 요청과 기대 동작

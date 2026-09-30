@@ -184,7 +184,7 @@ Ray-marched volumes for gas, galaxies, clouds, tissue: a low-resolution render t
 
 ## 17. Supplied or found assets
 
-- Images and models found in research or supplied by the requester are embedded with `scripts/embed_assets.py` into `parts/p3_assets.js`
+- Images and models found in research or supplied by the requester are embedded with `scripts/embed_assets.mjs` into `parts/p3_assets.js`
   (data URLs), loaded with `loadTextureData` / `loadGLBData` into READY. Credit sources and licences in the header comment.
 - Downscale first; keep the film ≲ 10 MB. Photos go onto surfaces that exist in the scene (a screen, a label, a planet map), never as flat
   inserts (P24).

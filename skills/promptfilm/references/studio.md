@@ -23,8 +23,8 @@ Studio lists it, e.g. `undersea-cable`).
 - Without `#film=…` the page shows the film worked on last (a fresh storyboard counts), and a film that appears while the page is open is
   shown by itself. The link to give in a message is `http://127.0.0.1:<port>/#film=<film-id>`.
 - It prints `http://127.0.0.1:4870/` and writes its port to `<working-dir>/.promptfilm/studio.json`, where await.mjs reads it. It listens on
-  127.0.0.1 only, reads and writes only under the working directory, needs nothing beyond `scripts/` (`npm install` there once) and ffmpeg
-  for rendering. Films are found up to four folders deep: a folder with `build.sh` + `parts/` (from new_film.sh; its versions
+  127.0.0.1 only, reads and writes only under the working directory, needs nothing beyond what setup.sh installs (the packages, a Chrome,
+  ffmpeg). Films are found up to four folders deep: a folder with `build.sh` + `parts/` (from new_film.sh; its versions
   `<name>.v<N>.html` are selectable) or single `.html` films with the engine's hooks (older films included — they play, take comments and
   render; they have no beats or captions to show).
 - **Light on the machine**: idle, the server is one small node process. A headless Chrome runs only while a comment's snapshot or the
@@ -122,8 +122,9 @@ node <skill>/scripts/render.mjs <url | film.html> --still <t> [--out frame.png]
 - **Deterministic**: several headless browsers capture in parallel (default 4 for final), and the MP4 is bit-identical to a one-browser
   render. Capturing turns off the text layers' layer promotion (`will-change`) — otherwise their subpixel raster depends on the frames
   before — and first shows every moment once so every font subset is loaded.
-- macOS, Windows and Linux: Chrome is Playwright's (`npx playwright install chromium` in scripts/) or an installed Chrome/Chromium
-  (`CHROME=` to choose); on Linux without a GPU it renders with Chrome's software GL (slower, the same picture). ffmpeg on PATH.
+- macOS, Windows and Linux: Chrome is Playwright's Chromium (setup.sh installs it when no Chrome starts headless) or an installed
+  Chrome/Chromium (`CHROME=` to choose); on Linux without a GPU it renders with Chrome's software GL (slower, the same picture). ffmpeg:
+  the one on PATH (or `FFMPEG=`), else the skill's local copy.
 - Size by aspect: 1080 × 1920 · 1920 × 1080 · 1080 × 1080 · 1080 × 1350. Final: PNG capture → x264 slow CRF 14, yuv420p, BT.709 tags,
   faststart. Speed on an M-class laptop: about 23 frames/s final (a 60 s loop at 60 fps ≈ 2.6 min), about 50 frames/s draft.
 - The MP4 is the whole delivery: the captions are in the picture. Only when the requester asks for a subtitle file (a platform's own
