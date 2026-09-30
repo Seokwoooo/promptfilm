@@ -218,7 +218,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .card-head h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .01em; }
 .count { color: var(--ink-3); font: 500 12px/1 var(--num); }
-.card-foot { display: flex; gap: 8px; margin-top: 10px; }
+.card-foot { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }   /* two long labels (English) stack instead of overflowing */
 .card-foot .btn { flex: 1; }
 .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 6px; padding: 2px; }
 .seg button { border: 0; background: transparent; color: var(--ink-3); padding: 3px 9px; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap; }
