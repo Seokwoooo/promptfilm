@@ -13,9 +13,9 @@ one self-contained HTML file that loops seamlessly and exports to a frame-exact 
 
 English · [한국어](README.ko.md)
 
-<img src="docs/preview-blackwell.webp" width="440" alt="An example film, sped up: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
+<img src="docs/blackwell-loop.webp" width="360" alt="One loop of an example film: from a data hall to the graphics card, into the chip, down to memory cells, logic cells and the silicon crystal">
 
-<sub><i>"Zoom from a Blackwell graphics card down to single atoms" — one of the two reference films, sped up</i></sub>
+<sub><i>"Zoom from a Blackwell graphics card down to single atoms" — one full loop of a reference film, played at about 2.5×</i></sub>
 
 </div>
 
@@ -30,24 +30,24 @@ In Claude Code:
 
 Restart Claude Code (or run `/reload-plugins`). You also need Node.js 20+, ffmpeg and Chrome — see [Requirements](#requirements).
 
-Then type one line. That's all it takes:
+Then type `/promptfilm` and what you want. One line is enough:
 
 **A journey through scale**
 
 ```
-Make a motion graphic that zooms out from Earth to the observable universe
+/promptfilm Zoom out from Earth to the edge of the observable universe
 ```
 
 **How something works**
 
 ```
-Make a motion graphic showing how a mechanical watch works, from the mainspring to the hands
+/promptfilm Show how a mechanical watch works, from the mainspring to the hands
 ```
 
 **A product ad**
 
 ```
-Make an ad-style motion graphic for AirPods Pro 3
+/promptfilm An ad-style film for AirPods Pro 3
 ```
 
 ## What you get
@@ -119,8 +119,8 @@ work; Windows is untested (WSL is the safer route).
 /plugin install promptfilm@promptfilm
 ```
 
-Claude Code installs the scripts' packages for you. The skill is `/promptfilm:promptfilm`, and it also starts by itself when you ask for
-a motion graphic. To update later, from a shell:
+Claude Code installs the scripts' packages for you. Start the skill with `/promptfilm` (its full name is `/promptfilm:promptfilm`); it
+also starts by itself when you ask for a motion graphic. To update later, from a shell:
 
 ```sh
 claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
@@ -143,15 +143,15 @@ and runs every check, including checks that must catch planted faults.
 
 ## Usage
 
-Ask in your own words, in any language:
+After `/promptfilm`, ask in your own words, in any language:
 
 ```
-A 30-second 16:9 explainer of how a jet engine works, captions in English only
-An ad-style product film for our app, 9:16
-사람 몸에서 세포, DNA, 원자까지 확대해 들어가는 쇼츠 영상 만들어줘
+/promptfilm A 30-second 16:9 explainer of how a jet engine works, captions in English only
+/promptfilm An ad-style product film for our app, 9:16
+/promptfilm 사람 몸에서 세포, DNA, 원자까지 확대해 들어가는 쇼츠 영상 만들어줘
 ```
 
-Follow-ups work too: *"open the Studio"*, *"apply my review comments"*, *"render the MP4"*.
+In the same session, follow-ups work in plain words: *"open the Studio"*, *"apply my review comments"*, *"render the MP4"*.
 
 Films are made in your working folder, one folder each (`./<film-name>/`). Your answers to the kickoff question are remembered in
 `./.promptfilm/settings.json` and offered first next time.

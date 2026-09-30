@@ -13,9 +13,9 @@
 
 [English](README.md) · 한국어
 
-<img src="docs/preview-blackwell.webp" width="440" alt="예제 영상을 빨리 감은 모습: 데이터센터에서 그래픽카드와 칩 내부, 메모리 셀과 논리 셀을 지나 실리콘 결정까지">
+<img src="docs/blackwell-loop.webp" width="360" alt="예제 영상 한 바퀴: 데이터센터에서 그래픽카드와 칩 내부, 메모리 셀과 논리 셀을 지나 실리콘 결정까지">
 
-<sub><i>"블랙웰 그래픽카드 본체부터 원자 단위까지 확대해 줘" — 이 스킬의 기준이 된 두 영상 중 하나를 빨리 감은 모습</i></sub>
+<sub><i>"블랙웰 그래픽카드 본체부터 원자 단위까지 확대해 줘" — 이 스킬의 기준이 된 영상 한 바퀴를 약 2.5배속으로 재생한 모습</i></sub>
 
 </div>
 
@@ -31,24 +31,24 @@ Claude Code에서:
 Claude Code를 다시 시작하거나 `/reload-plugins`를 실행하세요. Node.js 20 이상, ffmpeg, Chrome도 필요해요. 자세한 내용은
 [필요한 것](#필요한-것)에 있어요.
 
-그다음엔 한 줄만 입력하면 돼요.
+그다음엔 `/promptfilm` 뒤에 원하는 걸 한 줄로 적으면 돼요.
 
 **스케일 여행**
 
 ```
-지구부터 관측 가능한 우주까지 확대하는 영상 만들어줘
+/promptfilm 지구부터 관측 가능한 우주까지 확대하는 영상 만들어줘
 ```
 
 **작동 원리**
 
 ```
-기계식 시계가 어떻게 가는지 태엽부터 바늘까지 모션그래픽으로 보여줘
+/promptfilm 기계식 시계가 어떻게 가는지 태엽부터 바늘까지 보여줘
 ```
 
 **제품 광고**
 
 ```
-에어팟 프로 3 광고 느낌의 제품 모션그래픽 만들어줘
+/promptfilm 에어팟 프로 3 광고 느낌의 제품 영상 만들어줘
 ```
 
 ## 특징
@@ -120,8 +120,8 @@ GPU가 있으면 좋아요. 없어도 돌아가지만, Chrome이 소프트웨어
 /plugin install promptfilm@promptfilm
 ```
 
-스크립트에 필요한 패키지는 Claude Code가 알아서 깔아 줘요. 스킬 이름은 `/promptfilm:promptfilm`이고, 모션그래픽을 만들어 달라고만
-해도 저절로 시작돼요. 나중에 업데이트할 때는 셸에서 이렇게 실행하세요.
+스크립트에 필요한 패키지는 Claude Code가 알아서 깔아 줘요. `/promptfilm`으로 시작하면 되고(정식 이름은 `/promptfilm:promptfilm`),
+모션그래픽을 만들어 달라고만 해도 저절로 시작돼요. 나중에 업데이트할 때는 셸에서 이렇게 실행하세요.
 
 ```sh
 claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
@@ -144,15 +144,15 @@ Claude Code에 "promptfilm 셀프테스트 돌려줘"라고 하세요. 10분쯤 
 
 ## 사용법
 
-평소 쓰는 말로, 어떤 언어로든 요청하면 돼요.
+`/promptfilm` 뒤에 평소 쓰는 말로, 어떤 언어로든 적으면 돼요.
 
 ```
-제트엔진이 어떻게 작동하는지 16:9 가로 30초로, 한국어 자막만 넣어서 만들어줘
-우리 앱 광고 느낌의 제품 모션그래픽 9:16으로 만들어줘
-Make a motion graphic that zooms from a grain of sand out to the whole Sahara
+/promptfilm 제트엔진이 어떻게 작동하는지 16:9 가로 30초로, 한국어 자막만 넣어서 만들어줘
+/promptfilm 우리 앱 광고 느낌의 제품 영상 9:16으로 만들어줘
+/promptfilm Zoom from a grain of sand out to the whole Sahara
 ```
 
-"스튜디오 열어줘", "리뷰 반영해줘", "mp4로 뽑아줘"처럼 이어서 요청해도 돼요.
+같은 세션에서는 "스튜디오 열어줘", "리뷰 반영해줘", "mp4로 뽑아줘"처럼 평소 말로 이어서 요청하면 돼요.
 
 영상은 작업 폴더 안에 영상마다 폴더 하나씩(`./<영상 이름>/`) 만들어져요. 첫 질문에서 고른 답은 `./.promptfilm/settings.json`에
 저장돼서, 다음번에 기본값으로 먼저 나와요.
