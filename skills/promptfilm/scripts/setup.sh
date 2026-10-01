@@ -20,5 +20,13 @@ if ! node_ok; then
   esac
   exit 3
 fi
+# promptfilm itself: installed as a Claude Code plugin, a newer version on its marketplace is installed first (update.mjs) and this run
+# goes on with it — its setup, its notice, its skill folder (PROMPTFILM_NO_UPDATE=1: no update)
+if [ $check_only = 0 ] && [ -z "$PROMPTFILM_NO_UPDATE" ]; then
+  up=$(node "$HERE/update.mjs" 2>/dev/null)
+  [ -n "$up" ] && printf '%s\n' "$up" | grep -v '^PF_SKILL='
+  new=$(printf '%s\n' "$up" | sed -n 's/^PF_SKILL=//p')
+  if [ -n "$new" ] && [ -f "$new/scripts/setup.sh" ]; then PROMPTFILM_NO_UPDATE=1 exec sh "$new/scripts/setup.sh" "$@"; fi
+fi
 node "$HERE/setup.mjs" "$@" || exit $?
 exec node "$HERE/env_check.mjs" "$@"

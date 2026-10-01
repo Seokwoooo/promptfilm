@@ -10,7 +10,7 @@
 // timing) — only when the requester asks for a subtitle file.
 // The final video (not --draft, --seconds or --still) is made only of a build that passed its full QA run and its visual review
 // (gate.mjs); --unchecked renders anyway — then the requester must be told the video is unchecked.
-import { spawn } from 'child_process';
+import { spawn, execFileSync } from 'child_process';
 import { once } from 'events';
 import http from 'http';
 import os from 'os';
@@ -60,16 +60,36 @@ async function capture(cdp, page, t, format) {
 const stamp = (s) => { const ms = Math.max(0, Math.round(s * 1000)), p = (n, w = 2) => String(n).padStart(w, '0');
   return `${p(Math.floor(ms / 3600000))}:${p(Math.floor(ms / 60000) % 60)}:${p(Math.floor(ms / 1000) % 60)},${p(ms % 1000, 3)}`; };
 
+// how many browsers capture at once by default: one per 3 cores and per 4 GB of memory, at most 4 (2 for a draft) — and, where the
+// first browser can be measured, only as many as fit in half the machine's memory next to the encoder and this process (≈ 1.4 GB).
+// One browser holds 0.9–1.5 GB at the output size, depending on the film's data, textures and geometry: on 8 GB a light film gets 2
+// (≈ 3.5 GB in all), a data-heavy one 1. The video is the same whatever the number — it only sets the speed.
+export const defaultWorkers = (draft = false) => Math.max(1, Math.min(draft ? 2 : 4, Math.floor(os.cpus().length / 3), Math.floor(os.totalmem() / 2 ** 32)));
+// what one capturing browser holds (MB): its processes' resident memory (ps — macOS, Linux); null where it can't be measured
+async function browserMB(browser) {
+  try {
+    const s = await browser.newBrowserCDPSession(), { processInfo } = await s.send('SystemInfo.getProcessInfo'); await s.detach();
+    const out = execFileSync('ps', ['-o', 'rss=', '-p', processInfo.map(p => p.id).filter(Boolean).join(',')], { encoding: 'utf8' });
+    return out.trim().split(/\s+/).reduce((a, x) => a + (+x || 0), 0) / 1024 || null;
+  } catch (e) { return null; }
+}
+
 // render one or more loops to `out` (.mp4). Several browsers capture frames in parallel (frame i on worker i mod K; lossless PNG
 // capture is the slow step and scales with them) and one ffmpeg encodes them in order. onProgress({ frame, total, elapsed }) as
 // frames reach the encoder; `signal` (AbortSignal) cancels.
 export async function render({ url, out, fps = 60, draft = false, text = true, loops = 1, srt = false, workers = 0, seconds = 0, gateFile = null, onProgress = () => {}, signal } = {}) {
   if (draft && fps === 60) fps = 30;
-  const K = Math.max(1, Math.min(8, workers || (draft ? 2 : Math.max(1, Math.min(4, Math.floor(os.cpus().length / 3))))));
-  const settled = await Promise.allSettled([...Array(K)].map(() => prepare(url, text)));
-  const P = settled.filter(r => r.status === 'fulfilled').map(r => r.value);
+  let K = Math.max(1, Math.min(8, workers || defaultWorkers(draft)));
+  const P = [];
   let ff = null, ok = false;
   try {
+    if (!workers && K > 1) {                                   // measure the first browser, then open as many more as fit
+      P.push(await prepare(url, text));
+      const mb = await browserMB(P[0].browser);
+      if (mb) K = Math.max(1, Math.min(K, Math.floor((os.totalmem() / 2 ** 20 / 2 - 1400) / (mb * 1.15))));
+    }
+    const settled = await Promise.allSettled([...Array(K - P.length)].map(() => prepare(url, text)));
+    P.push(...settled.filter(r => r.status === 'fulfilled').map(r => r.value));
     if (P.length < K) throw settled.find(r => r.status === 'rejected').reason;
     const { info, W, H } = P[0];
     const N = Math.max(1, Math.round(info.LOOP * fps)), dt = info.LOOP / N;

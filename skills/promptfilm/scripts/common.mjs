@@ -38,10 +38,11 @@ export const CHROME_ARGS = [...GPU_ARGS, '--enable-gpu', '--ignore-gpu-blocklist
 
 // CSS px the QA opens a film at, by aspect (about half a million pixels each; 9x16 = 540 × 960)
 export const SIZES = { '9x16': [540, 960], '16x9': [960, 540], '1x1': [720, 720], '4x5': [640, 800] };
-// open the film: w × h CSS px (default: SIZES for the film's aspect × scale), device pixel ratio, extra query string (e.g. '?freeze')
+// open the film: w × h CSS px (default: SIZES for the film's aspect × scale), device pixel ratio, extra query string (e.g. '?freeze');
+// `browser`: open it as another page of a running browser (one browser and GPU process less in memory) — then close() closes the page only
 export const launch = () => chromium.launch({ executablePath: exePath(), headless: true, args: CHROME_ARGS });
-export async function open(url, { w, h, scale = 1, dpr = 1, q = '?freeze', timeout = 180000 } = {}) {
-  const browser = await launch();
+export async function open(url, { w, h, scale = 1, dpr = 1, q = '?freeze', timeout = 180000, browser: shared = null } = {}) {
+  const browser = shared || await launch();
   const auto = !(w && h), sz = s => ({ width: Math.round(s[0] * scale), height: Math.round(s[1] * scale) });
   const page = await browser.newPage({ viewport: auto ? sz(SIZES['9x16']) : { width: +w, height: +h }, deviceScaleFactor: dpr });
   const logs = [];
@@ -54,7 +55,10 @@ export async function open(url, { w, h, scale = 1, dpr = 1, q = '?freeze', timeo
     const aspect = await page.evaluate(() => (window.__bw && window.__bw.FORMAT && window.__bw.FORMAT.aspect) || '9x16');
     if (aspect !== '9x16' && SIZES[aspect]) { await page.setViewportSize(sz(SIZES[aspect])); await page.waitForTimeout(100); }
   }
-  return { browser, page, logs, err };
+  // a still page (?freeze) draws only when seek() asks: left alone, the engine redraws the same frame at the display's rate, and the
+  // GPU time goes to that instead of the checks (the Studio and render.mjs draw the same way)
+  if (/freeze/.test(q) && !err) await page.evaluate(() => { const b = window.__bw; if (b && typeof b.external === 'function') b.external(true); });
+  return { browser, page, logs, err, close: () => (shared ? page.close() : browser.close()) };
 }
 // console noise that is not the film's fault
 export const realLogs = logs => logs.filter(l => !/favicon|404 \(File not found\)|status of 404|GPU stall|Automatic fallback to software WebGL/.test(l));

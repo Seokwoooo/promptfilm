@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // The skill's own check: builds the engine's test films in a temporary folder and runs everything that must keep working —
-// new film + build, QA (and that it catches planted faults), the plan's time budget, the visual review and the delivery gate,
-// frame-exact rendering, live pace, the Studio (films, pace edits, comments + snapshots, opening the page, Send to Claude reaching the
-// right session, the storyboard).
-//   node selftest.mjs [--keep]          (about 10 minutes with a GPU — two full QA runs; exit code 0 = every check passed)
+// new film + build, QA (and that it catches planted faults), the plan's time budget, keeping itself up to date, the visual review and
+// the delivery gate, frame-exact rendering, live pace, the Studio (films, pace edits, comments + snapshots, opening the page, Send to
+// Claude reaching the right session, the storyboard).
+//   node selftest.mjs [--keep]          (about 5 minutes with a GPU — two full QA runs; exit code 0 = every check passed)
 // Needs what `sh setup.sh` installs (the packages, a Chrome, an ffmpeg). Writes nothing inside the skill.
 import fs from 'fs';
 import os from 'os';
@@ -145,6 +145,24 @@ function applySceneOk(tau, tp, field) {`);
       `a fitting plan passes · 12 short cards: ${many.code === 1 ? 'refused' : 'NOT refused'} · 5 stops 32 decades apart in 35 s: ${deep.code === 1 ? 'refused' : 'NOT refused'}${ok.code ? ' · the fitting plan was refused: ' + ok.out.split('\n').slice(-4).join(' ') : ''}`);
   });
 
+  // 2c') keeping itself up to date (scripts/update.mjs): a plugin install sees that its marketplace has a newer commit, an installed copy
+  //      of that commit sees nothing to do, a copy outside a plugin install is left alone (--dry: nothing is installed)
+  await step('self-update', async () => {
+    const d = path.join(TMP, 'upd'), work = path.join(d, 'w'), repo = path.join(d, 'pf.git'), g = (...a) => execFileSync('git', a, { cwd: work, encoding: 'utf8' }).trim();
+    fs.mkdirSync(work, { recursive: true }); fs.writeFileSync(path.join(work, 'README.md'), 'test\n');
+    g('init', '-q'); g('add', '-A'); g('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 't'); execFileSync('git', ['clone', '-q', '--bare', work, repo]);
+    const head = g('rev-parse', 'HEAD').slice(0, 12), U = path.join(SKILL, 'scripts', 'update.mjs');
+    fs.mkdirSync(path.join(d, 'plugins'), { recursive: true });
+    fs.writeFileSync(path.join(d, 'plugins', 'known_marketplaces.json'), JSON.stringify({ pf: { source: { source: 'git', url: 'file://' + repo } } }));
+    const at = v => { const s = path.join(d, 'plugins', 'cache', 'pf', 'promptfilm', v, 'skills', 'promptfilm'); fs.mkdirSync(s, { recursive: true }); return s; };
+    const env = { ...process.env, PROMPTFILM_NO_UPDATE: '' };
+    const old = await run(process.execPath, [U, '--dry', '--skill', at('000000000000')], { env }), cur = await run(process.execPath, [U, '--dry', '--skill', at(head)], { env });
+    const here = await run(process.execPath, [U, '--dry'], { env });
+    fs.rmSync(d, { recursive: true, force: true });
+    check('self-update', old.out.includes(`would update promptfilm@pf 000000000000 → ${head}`) && !cur.out.trim() && !here.out.trim() && !old.code && !cur.code && !here.code,
+      `an older install: ${old.out.trim() ? 'updates' : 'NOT seen'} · the newest: ${cur.out.trim() ? 'updates again: ' + cur.out.trim() : 'nothing to do'} · outside a plugin install: ${here.out.trim() ? 'acts: ' + here.out.trim() : 'left alone'}`);
+  });
+
   // 2d) the visual review's material, and the delivery gate: no final video of a build without a passing full QA and a passing review
   await step('review + gate', async () => {
     const html = path.join(TMP, 'demo', 'demo.html'), qa = path.join(TMP, 'demo', 'qa'), orig = fs.readFileSync(html, 'utf8');
@@ -185,10 +203,10 @@ function applySceneOk(tau, tp, field) {`);
   await step('render frame-exact', async () => {
     const { render } = await import('./render.mjs'), url = `${web.base}/demo-ad/demo-ad.html`;
     const a = await render({ url, out: path.join(TMP, 'r1.mp4'), workers: 1, seconds: 1.5 });              // the defaults: the MP4 only
-    const b = await render({ url, out: path.join(TMP, 'r3.mp4'), workers: 3, seconds: 1.5, srt: true });   // a subtitle file only when asked
-    const m1 = md5s(a.out), m3 = md5s(b.out), diff = m1.filter((h, i) => h !== m3[i]).length + Math.abs(m1.length - m3.length);
+    const b = await render({ url, out: path.join(TMP, 'r2.mp4'), seconds: 1.5, srt: true });   // this machine's default browsers; a subtitle file only when asked
+    const m1 = md5s(a.out), m2 = md5s(b.out), diff = m1.filter((h, i) => h !== m2[i]).length + Math.abs(m1.length - m2.length);
     const srtOk = !a.srt && !fs.existsSync(path.join(TMP, 'r1.srt')) && !!b.srt && fs.existsSync(b.srt);
-    check('render frame-exact', m1.length === 90 && diff === 0 && srtOk, `${m1.length} frames · ${a.size.join('×')} · 1 vs 3 browsers: ${diff} differ · ${(90 / a.renderSeconds).toFixed(1)} fps · .srt only with --srt: ${srtOk}`);
+    check('render frame-exact', m1.length === 90 && diff === 0 && srtOk, `${m1.length} frames · ${a.size.join('×')} · 1 vs ${b.workers} browsers (the default here): ${diff} differ · ${(90 / a.renderSeconds).toFixed(1)} fps · .srt only with --srt: ${srtOk}`);
   });
 
   // 4) the engine's live pace: retime changes the loop, and retime({}) gives the authored loop back exactly

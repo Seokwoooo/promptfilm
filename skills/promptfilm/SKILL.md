@@ -44,6 +44,11 @@ sh <skill>/scripts/setup.sh --model <your exact model id> --lang ko|en      (ko 
   download about 200 MB and take a few minutes (run it with a 10-minute timeout); tell the requester in one line that you are getting
   the tools ready, and afterwards what was installed. When it ends with `SETUP MISSING …` lines, show them to the requester with the
   command to run (they can type it with a `!` in front), wait until it is done, and run setup.sh again — no film can be made without them.
+- **Update** (update.mjs, first): installed as a Claude Code plugin, promptfilm checks its marketplace for a newer version and installs
+  it (`claude plugin update`); the run then goes on with the new version and prints `setup: promptfilm updated <old> → <new>. From now
+  on <skill> is <path> — read its SKILL.md again …`. Then tell the requester in one line that promptfilm was updated, read that
+  SKILL.md and follow it from step 1 (its setup has already run), with that path as `<skill>` in every command. A line saying a newer
+  version could not install itself: show it as it is and go on. Nothing printed: nothing to do.
 - **Environment notice** (env_check.mjs, printed last): pass the model id your instructions give you (e.g. `claude-opus-5-5`); a model
   that isn't Claude passes its own name. In any host that is not Claude Code the notice always shows (the script tells the host from the
   processes that launched it). If it prints a ⚠️ notice, show it to the requester as it is (translated, when they speak neither Korean
@@ -121,7 +126,7 @@ Skip it only when the taste profile says so or the request asks to start at once
   studio light. Nothing may look like a mock-up — not even in a test.
 - Tools: step 0's setup.sh made sure of them. If a script later can't find one (`Cannot find package …`, no Chrome, no ffmpeg), run
   setup.sh again. `node <skill>/scripts/selftest.mjs` checks the whole toolchain on a machine, the checks catching planted faults
-  included (≈10 min).
+  included (≈5 min; run it with `run_in_background`).
 - Write the world in `parts/p3_*.js` … `p6_*.js` and the timeline in `parts/p8_*.js`; edit the title and header comment in `p1_head.html`
   (story, data sources, look, what is illustrative, pacing, keys). Split long code over several files and writes.
 - Author in τ, then mark every stretch with a beat (`hook`, `key`, `normal`, `transit`, `return`) — the engine plays them at the taste
@@ -159,9 +164,10 @@ pin not `done` (time, spot, the snapshot image, the authored τ) is a finding. F
 (`status: "done"`, a short `reply` in their language, `resolvedIn`); the Studio shows the answer and reloads the new build by itself —
 run the server command again at the end of the round so the page is in front of them.
 
-Then, whenever a round is done: **`node <skill>/scripts/ship.mjs <film>`** — it builds, runs the **full** QA (every check passes or
-you fix it; for flicker, find the kind and the cause with `scripts/flicker_probe.mjs` first, qa.md §5), makes the visual review's
-material and prints the brief. Look yourself at what QA flagged and at every stop (qa.md §4); then give the brief to a **fresh
+Then, whenever a round is done: **`node <skill>/scripts/ship.mjs <film>`**, with `run_in_background` (about 4–5× the loop: a 60 s
+loop ≈ 5 min, more on a slower machine — too long for a foreground command's time limit) — it builds, runs the **full** QA (every check
+passes or you fix it; for flicker, find the kind and the cause with `scripts/flicker_probe.mjs` first, qa.md §5), makes the visual
+review's material and prints the brief. Look yourself at what QA flagged and at every stop (qa.md §4); then give the brief to a **fresh
 subagent that did not build the film** (references/visual-review.md) — it writes `<film>/qa/visual-review.md`. Fix every finding (and its
 kind across the film), run ship.mjs again, review again: a build that failed a review stays failed until it is rebuilt.
 **The film is done only when `node <skill>/scripts/gate.mjs <film>/<name>.html` says READY** — this build passed the full QA and its
@@ -172,11 +178,11 @@ visual review. Nothing short of that is reported as finished. A check the reques
 
 - Save `<name>.html` (latest) and `<name>.v<N>.html` (this version) side by side; never delete earlier versions.
 - The video: the Studio's "MP4 만들기" (Export), or `node <skill>/scripts/render.mjs <film>/<name>.html --out <film>/render/<name>.v<N>.mp4`
-  (frame-exact, one seamless loop, 1080 px on the short side). The video only — the captions are already in the picture; write a subtitle
-  file (`--srt`) only when the requester asks for one. Render the final once the requester is happy, or when asked. render.mjs makes a
-  final video only of a build the gate calls READY; when the requester wants a video of a build that isn't ("일단 뽑아줘"), finish the
-  checks first if they are close, else render with `--unchecked` **and say plainly in the report that this video has not passed its
-  checks, and which ones** (a `--draft` preview needs no gate).
+  (frame-exact, one seamless loop, 1080 px on the short side; a few minutes: with `run_in_background`). The video only — the captions
+  are already in the picture; write a subtitle file (`--srt`) only when the requester asks for one. Render the final once the
+  requester is happy, or when asked. render.mjs makes a final video only of a build the gate calls READY; when the requester wants a
+  video of a build that isn't ("일단 뽑아줘"), finish the checks first if they are close, else render with `--unchecked` **and say
+  plainly in the report that this video has not passed its checks, and which ones** (a `--draft` preview needs no gate).
 - If the session can publish Claude artifacts and the requester uses them, update the same private artifact URL each version (the page
   body without `<!DOCTYPE>`, `<html>`, `<head>`, charset/viewport meta and the `<body>` wrapper).
 - Open the Studio on the film (the server command again) as you report, so they can watch it at once.
@@ -241,4 +247,5 @@ before delivering. And never call a film finished, or render its final video, be
 | scripts/ship.mjs | step 6: build → full QA → the review's material and brief → the gate, in one command |
 | scripts/review.mjs · scripts/gate.mjs | step 6: the visual review's material · is this build READY (full QA + visual review)? |
 | scripts/setup.sh | step 0: installs what this machine is missing (setup.mjs), then the environment notice (env_check.mjs: host, model, effort) |
+| scripts/update.mjs | step 0, run by setup.sh first: a plugin install takes a newer promptfilm from its marketplace and goes on with it |
 | scripts/selftest.mjs | after changing the engine, the scripts or the Studio (and on a new machine): the skill checks itself end to end |

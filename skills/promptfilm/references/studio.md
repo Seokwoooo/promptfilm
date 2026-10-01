@@ -119,14 +119,18 @@ node <skill>/scripts/render.mjs <url | film.html> --still <t> [--out frame.png]
 - A local file is served from a throwaway local server; an http URL is used as is.
 - **Frame-exact**: frame i shows playback time i · LOOP / N (N = round(LOOP · fps)), so the video is exactly one loop (or N loops) and
   joins itself on auto-replay. The film is a pure function of t, so the machine's speed never shows in the video.
-- **Deterministic**: several headless browsers capture in parallel (default 4 for final), and the MP4 is bit-identical to a one-browser
-  render. Capturing turns off the text layers' layer promotion (`will-change`) — otherwise their subpixel raster depends on the frames
-  before — and first shows every moment once so every font subset is loaded.
+- **Deterministic**: several headless browsers capture in parallel (by default one per 3 cores and per 4 GB of memory, at most 4, and
+  only as many as fit in half the memory, measured on the first one — on 8 GB: 2 for most films, 1 for a data-heavy one; `--workers K`
+  to choose), and the MP4 is bit-identical to a one-browser render. Capturing turns off the text layers'
+  layer promotion (`will-change`) — otherwise their subpixel raster depends on the frames before — and first shows every moment once so
+  every font subset is loaded.
 - macOS, Windows and Linux: Chrome is Playwright's Chromium (setup.sh installs it when no Chrome starts headless) or an installed
   Chrome/Chromium (`CHROME=` to choose); on Linux without a GPU it renders with Chrome's software GL (slower, the same picture). ffmpeg:
   the one on PATH (or `FFMPEG=`), else the skill's local copy.
 - Size by aspect: 1080 × 1920 · 1920 × 1080 · 1080 × 1080 · 1080 × 1350. Final: PNG capture → x264 slow CRF 14, yuv420p, BT.709 tags,
-  faststart. Speed on an M-class laptop: about 23 frames/s final (a 60 s loop at 60 fps ≈ 2.6 min), about 50 frames/s draft.
+  faststart. Speed on an M2 Pro: about 27 frames/s final with 4 browsers (a 60 s loop at 60 fps ≈ 2.3 min), 20 with 2 (≈ 3 min), 12
+  with 1. Memory: 0.9–1.5 GB per browser (the film's data, textures and geometry) plus ≈ 1.4 GB for the encoder and the script (4
+  browsers ≈ 5.2 GB, 2 ≈ 3.5 GB). Run it with `run_in_background`.
 - The MP4 is the whole delivery: the captions are in the picture. Only when the requester asks for a subtitle file (a platform's own
   subtitles), add `--srt`: `<out>.srt` then carries the same lines and timing. Nobody else makes one — not the Studio, not by default.
 

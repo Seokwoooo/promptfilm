@@ -156,6 +156,12 @@
       "prompt": "(a machine without Node.js and without Homebrew) /promptfilm 우주 스케일 영상 만들어줘",
       "expected_output": "setup.sh ends with 'SETUP MISSING node …' and the way to install Node.js for this OS; the reply shows that line and the command in Korean, asks the requester to install it (or run it with a leading !), waits, and runs setup.sh again before any film work.",
       "files": []
+    },
+    {
+      "id": 27,
+      "prompt": "(setup.sh prints: setup: promptfilm updated 163bfec → 9a1b2c3. From now on <skill> is /Users/x/.claude/plugins/cache/promptfilm/promptfilm/9a1b2c3d4e5f/skills/promptfilm — read its SKILL.md again and follow it (the next session loads it by itself)) /promptfilm 반도체 칩 안으로 들어가는 모션그래픽 만들어줘",
+      "expected_output": "Tells the requester in one Korean line that promptfilm was updated, reads the SKILL.md at the new path and follows it from step 1 (no second setup run needed), and uses the new path as <skill> in every later command (new_film.mjs, qa.mjs, ship.mjs, studio/server.mjs …) — never the old copy's scripts; asks nothing about the update.",
+      "files": []
     }
   ]
 }

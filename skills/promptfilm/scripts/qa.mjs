@@ -219,7 +219,7 @@ if (run('seam')) {
    reference films never go below 4% — and the share covered by solid geometry at all) */
 if (run('empty')) {
   const dir = mkdir(path.join(out, 'empty')), k = 320 / Math.max(W, H), EDGE = 0.015, SPARSE = 0.03, GEO = 0.01, STEP = 0.25;
-  const sm = await open(url, { w: Math.round(W * k), h: Math.round(H * k), q: '?freeze&text=0' });
+  const sm = await open(url, { w: Math.round(W * k), h: Math.round(H * k), q: '?freeze&text=0', browser });   // a second page of the same browser
   const share = png => {
     const { width: w, height: h, data } = png, L = new Float32Array(w * h); let e = 0, n = 0;
     for (let i = 0; i < w * h; i++) L[i] = 0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2];
@@ -232,7 +232,7 @@ if (run('empty')) {
     const geo = scan ? (await sm.page.evaluate(() => window.__bw._dbg.surfaceScan(64))).geo : 1;
     samples.push({ t, s, geo, buf, empty: s < EDGE || (s < SPARSE && geo < GEO) });
   }
-  await sm.browser.close();
+  await sm.close();
   const stretches = []; let cur = null;
   for (const x of samples) {
     if (x.empty) { if (!cur) cur = { t0: x.t, t1: x.t + STEP, min: x.s, buf: x.buf }; else { cur.t1 = x.t + STEP; if (x.s < cur.min) { cur.min = x.s; cur.buf = x.buf; } } }
@@ -251,11 +251,11 @@ if (run('surfaces')) {
   if (!info.hasScan) note('surfaces', { pass: false, note: 'the film runs an older engine without _dbg.surfaceScan() — update parts/ from engine/core (QA engine)' });
   else {
     const dir = mkdir(path.join(out, 'surfaces')), k = 320 / Math.max(W, H), STEP = 0.1, BACK = 0.004, NEAR = 0.25;
-    const sm = await open(url, { w: Math.round(W * k), h: Math.round(H * k), q: '?freeze&text=0' });
+    const sm = await open(url, { w: Math.round(W * k), h: Math.round(H * k), q: '?freeze&text=0', browser });
     const samples = [];
     for (let t = 0; t < LOOP; t += STEP) samples.push({ t, ...(await sm.page.evaluate(t => { window.__bw.seek(t); return window.__bw._dbg.surfaceScan(96); }, t)) });
     const path_ = await sm.page.evaluate(() => window.__bw._dbg.pathScan ? window.__bw._dbg.pathScan(1 / 60) : { hits: 0, first: [], skipped: [], missing: true });
-    await sm.browser.close();
+    await sm.close();
     const stretches = (key, lim, minDur) => { const o = []; let cur = null;
       for (const x of samples) { if (x[key] >= lim) { if (!cur) cur = { t0: x.t, t1: x.t + STEP, worst: x[key], at: x.t }; else { cur.t1 = x.t + STEP; if (x[key] > cur.worst) { cur.worst = x[key]; cur.at = x.t; } } } else if (cur) { o.push(cur); cur = null; } }
       if (cur) o.push(cur); return o.filter(x => x.t1 - x.t0 >= minDur - 1e-6); };
@@ -277,13 +277,13 @@ if (run('surfaces')) {
 // object — scrambles pixels from frame to frame by itself
 if (run('flicker')) {
   const dir = mkdir(path.join(out, 'flicker')), res = [];
-  const sm = await open(url, { w: Math.round(W / 4), h: Math.round(H / 4), q: '?freeze&text=0' });   // W, H: the viewport measured above
+  const sm = await open(url, { w: Math.round(W / 4), h: Math.round(H / 4), q: '?freeze&text=0', browser });   // W, H: the viewport measured above
   const calm = [];
   for (let t = 0; t < LOOP - 0.1; t += 0.2) {
     await seek(sm.page, t); const a = decode(await shot(sm.page)); await seek(sm.page, t + 4 / 60); const b = decode(await shot(sm.page));
     calm.push([t, diff(a, b).mean]);
   }
-  await sm.browser.close();
+  await sm.close();
   const beatsF = info.hasBeats ? await page.evaluate(() => window.__bw.beats()) : [];
   const picks = [];
   const CALM = 2.5;                         // mean change over 4 frames (0..255) above which a moment is not calm
@@ -326,7 +326,7 @@ if (run('flicker')) {
 /* ---------- pops: a patch of the frame that changes in one step while steady before and after (something appearing) ---------- */
 if (run('pops')) {
   // (the 3D picture only: text layers change by design and fade on their own clock)
-  const pp = await open(url, { w: Math.round(W / 3), h: Math.round(H / 3), q: '?freeze&text=0' }), pg = pp.page;
+  const pp = await open(url, { w: Math.round(W / 3), h: Math.round(H / 3), q: '?freeze&text=0', browser }), pg = pp.page;
   const GX = 9, GY = 16, dt = 1 / 30, series = [];
   for (let t = 0; t < LOOP; t += dt) {
     await seek(pg, t); const p = decode(await shot(pg)), cw = p.width / GX, ch = p.height / GY, cell = new Float32Array(GX * GY);
@@ -343,7 +343,7 @@ if (run('pops')) {
     const d0 = series[i - 1][1][k] - series[i - 2][1][k], d1 = series[i][1][k] - series[i - 1][1][k], d2 = series[i + 1][1][k] - series[i][1][k];
     if (Math.abs(d1) > 16 && Math.abs(d0) < 2.5 && Math.abs(d2) < 2.5) sus.push({ t: +series[i][0].toFixed(2), cell: [k % GX, Math.floor(k / GX)], jump: +d1.toFixed(1) });
   }
-  await pp.browser.close();
+  await pp.close();
   const byT = {}; sus.forEach(s => { (byT[s.t] = byT[s.t] || []).push(s.cell); });
   const times = Object.keys(byT).map(Number).sort((a, b) => a - b);
   const dir = mkdir(path.join(out, 'pops'));
@@ -436,31 +436,65 @@ if (run('fps') || run('duration') || run('drift') || run('live')) {
     let d = b[0] - a[0]; if (d < 0) d += LOOP;
     const rate = d / ((b[1] - a[1]) / 1000); note('duration', { rate: +rate.toFixed(4), pass: Math.abs(rate - 1) < 0.01 });
   }
-  if (run('drift')) {
-    await seek(page, 2); await page.waitForTimeout(50); const a = decode(await shot(page));
-    await page.evaluate(() => { window.__bw.seek(1.5); window.__bw.play(); }); await page.waitForTimeout((LOOP + 1) * 1000);
-    await seek(page, 2); await page.waitForTimeout(50); const b = decode(await shot(page));
-    const d = diff(a, b, [0, 0, 1, 0.6]); note('drift', { afterSeconds: +(LOOP + 1).toFixed(1), maxTop60: d.max, mean: +d.mean.toFixed(3), pass: d.max === 0 });
-  }
-  // live: real-time playback captured as fast as possible — black blocks (a dark hole inside a bright area) that seek-mode scans can miss
-  if (run('live')) {
-    const dir = mkdir(path.join(out, 'live')); let frames = 0; const bad = [];
-    await page.evaluate(() => { document.getElementById('frame').classList.add('nolabels'); window.__bw.seek(0); window.__bw.play(); });   // the picture only (letter counters look like holes)
-    const t0 = Date.now();
-    while (Date.now() - t0 < LOOP * 1000) {
-      const buf = await page.screenshot({ type: 'png' }); const p = decode(buf), Wp = p.width, Hp = p.height; frames++;
-      // a hole = a dark square (≥ 6 px) with bright picture on all four sides (a thin dark band, e.g. an edge, has dark ends)
-      let holes = 0; const L = (x, y) => lum(p, (y * Wp + x) * 4);
+  // drift and live share ONE real-time loop (from 1.5 s, a loop and a second long): live looks at the frames as they play, drift compares
+  // the frame at t = 2 before and after it — real time can't be sped up, so it is spent once
+  if (run('drift') || run('live')) {
+    const nolabels = on => page.evaluate(on => document.getElementById('frame').classList.toggle('nolabels', on), on);   // the picture only (letter counters look like holes)
+    let a0 = null;
+    if (run('drift')) { await seek(page, 2); await page.waitForTimeout(50); a0 = decode(await shot(page)); }
+    // a hole = a dark square (≥ 6 px) with bright picture on all four sides (a thin dark band, e.g. an edge, has dark ends)
+    const holes = p => { const Wp = p.width, Hp = p.height, L = (x, y) => lum(p, (y * Wp + x) * 4), o = [];
       for (let y = 12; y < Hp - 12; y += 3) for (let x = 12; x < Wp - 12; x += 3) {
         if (L(x, y) > 3) continue;
         let dark = true; for (let dy = -3; dy <= 3 && dark; dy += 2) for (let dx = -3; dx <= 3; dx += 2) if (L(x + dx, y + dy) > 4) { dark = false; break; }
-        if (!dark) continue;
-        if (L(x + 9, y) > 60 && L(x - 9, y) > 60 && L(x, y + 9) > 60 && L(x, y - 9) > 60) holes++;
+        if (dark && L(x + 9, y) > 60 && L(x - 9, y) > 60 && L(x, y + 9) > 60 && L(x, y - 9) > 60) o.push([x, y]);
       }
-      if (holes > 2) { const t = await page.evaluate(() => window.__bw.time()); bad.push([+t.toFixed(2), holes]); if (bad.length <= 6) fs.writeFileSync(path.join(dir, `hole_t${t.toFixed(2)}.png`), buf); }
+      return o; };
+    let frames = 0; const sus = [], dir = run('live') ? path.join(out, 'live') : null;
+    if (dir) { fs.rmSync(dir, { recursive: true, force: true }); mkdir(dir); await nolabels(true); }
+    await page.evaluate(() => { window.__bw.seek(1.5); window.__bw.play(); });
+    const t0 = Date.now(), span = (LOOP + 1) * 1000;
+    if (!run('live')) await page.waitForTimeout(span);
+    // live: the playing picture captured as fast as the machine allows (the moment of each frame lies between the two time readings);
+    // a frame with holes goes to live/ at once (memory stays flat) and is checked below
+    else while (Date.now() - t0 < span) {
+      const ta = await page.evaluate(() => window.__bw.time()), buf = await page.screenshot({ type: 'png' }), tb = await page.evaluate(() => window.__bw.time()); frames++;
+      const h = holes(decode(buf));
+      if (h.length > 2) { const f = path.join(dir, `hole_t${ta.toFixed(2)}.png`); fs.writeFileSync(f, buf); sus.push({ ta, tb, h, f }); }
     }
-    await page.evaluate(() => document.getElementById('frame').classList.remove('nolabels'));
-    note('live', { frames, suspect: bad.length, first: bad.slice(0, 10), pass: bad.length === 0, note: 'dark holes inside bright areas during real playback; images in live/' });
+    if (run('drift')) {
+      if (run('live')) await nolabels(false);
+      await seek(page, 2); await page.waitForTimeout(50); const b = decode(await shot(page));
+      const d = diff(a0, b, [0, 0, 1, 0.6]); note('drift', { afterSeconds: +(LOOP + 1).toFixed(1), maxTop60: d.max, mean: +d.mean.toFixed(3), pass: d.max === 0 });
+    }
+    if (run('live')) {
+      // what the design draws is no defect: a frame with holes is checked against the same moments drawn still (each twice — a moment
+      // that draws differently twice is nondeterministic, a defect). A live hole is the design when a still frame of its moment has it
+      // too; otherwise (a block only real playback shows, or one that comes and goes) it fails. Which frames are caught and how many
+      // depends on the machine's speed — this keeps the verdict from depending on it. The still frames are taken of the holes' area only.
+      await nolabels(true);
+      const bad = [], R = 12, near = (p, list) => list.some(q => Math.abs(q[0] - p[0]) <= R && Math.abs(q[1] - p[1]) <= R);
+      let design = 0;
+      for (const s of sus) {
+        if (bad.length >= 6) { fs.rmSync(s.f, { force: true }); continue; }      // enough to fail: the rest is not checked
+        const xs = s.h.map(p => p[0]), ys = s.h.map(p => p[1]), m = 24, k = 2;      // device px (the page is at DPR 2); margin for the scan's edges
+        const x0 = Math.max(0, Math.floor((Math.min(...xs) - m) / k)), y0 = Math.max(0, Math.floor((Math.min(...ys) - m) / k));
+        const clip = { x: x0, y: y0, width: Math.min(W - x0, Math.ceil((Math.max(...xs) + m) / k) - x0), height: Math.min(H - y0, Math.ceil((Math.max(...ys) + m) / k) - y0) };
+        const still = async t => { await seek(page, t); const p = decode(await page.screenshot({ type: 'png', clip })), f = p.width / clip.width;
+          return holes(p).map(q => [q[0] + clip.x * f, q[1] + clip.y * f]); };
+        let left = s.h, odd = false; const w = ((s.tb - s.ta) % LOOP + LOOP) % LOOP;
+        for (let dt = -1 / 60; dt <= w + 1 / 60 + 1e-9 && left.length > 2 && !odd; dt += 1 / 60) {
+          const t = ((s.ta + dt) % LOOP + LOOP) % LOOP, h1 = await still(t), h2 = await still(t);
+          if (h1.some(p => !near(p, h2)) || h2.some(p => !near(p, h1))) odd = true;
+          else left = left.filter(p => !near(p, h1));
+        }
+        if (left.length > 2 || odd) bad.push([+s.ta.toFixed(2), s.h.length, odd ? 'draws differently each time' : 'only in real playback']);
+        else { design++; fs.rmSync(s.f, { force: true }); }
+      }
+      await nolabels(false);
+      note('live', { frames, suspect: bad.length, design, first: bad, pass: bad.length === 0,
+        note: 'dark holes inside bright areas during real playback, not in the same moments drawn still ([t, holes, why]); design = frames whose holes the still frames show too; images in live/' });
+    }
   }
   const r = realLogs(logs); if (r.length) note('liveErrors', { logs: r.length, first: r.slice(0, 3) });
   await browser.close();
@@ -509,7 +543,7 @@ function summary(k, v) {
     case 'fps': return `mean ${v.mean}, min ${v.min} (${v.viewport})`;
     case 'duration': return `rate ${v.rate}`;
     case 'drift': return `max diff ${v.maxTop60} after ${v.afterSeconds} s`;
-    case 'live': return `${v.suspect} of ${v.frames} live frames with dark holes`;
+    case 'live': return `${v.suspect} of ${v.frames} live frames with dark holes${v.design ? ` (${v.design} more show holes the still frames have too: the design)` : ''}${v.first.length ? ' · ' + JSON.stringify(v.first.slice(0, 3)) : ''}`;
     default: return JSON.stringify(v).slice(0, 200);
   }
 }

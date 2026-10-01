@@ -13,9 +13,9 @@ ffmpeg makes the contact sheets: the one on PATH, else the skill's local copy (s
 ## 2. Run
 
 ```bash
-node <skill>/scripts/qa.mjs http://127.0.0.1:8765/<path>/<name>.html --out <film>/qa            # everything (~LOOP×3 s + a few minutes)
+node <skill>/scripts/qa.mjs http://127.0.0.1:8765/<path>/<name>.html --out <film>/qa            # everything (≈ 3.5–4 × the loop: 60 s → ~4 min)
 node <skill>/scripts/qa.mjs <url> --out <film>/qa --only load,engine,err,pace,read,empty,surfaces   # fast loop while building
-node <skill>/scripts/ship.mjs <film>                                  # a round done: build → FULL QA → review material + brief → gate
+node <skill>/scripts/ship.mjs <film>                                  # a round done: build → FULL QA → review material + brief → gate (in the background)
 node <skill>/scripts/shot.mjs <url> --out <dir> [--dpr 2] [--safe] [--text0] [--sheet 4] 1.5 3 4.25   # frames at chosen times (+ one tiled sheet)
 node <skill>/scripts/flicker_probe.mjs <url> <t> [--list] [--hide "name=<predicate>"] …                  # what flickers at t, and which kind (§5)
 ```
@@ -28,6 +28,10 @@ goes to the visual review as a flagged frame. A failure the requester **explicit
 conversation — is recorded in `<film>/qa/accepted.json` as `[{ "check": "flicker", "why": "…", "requester": "<their words>", "build":
 "<hash or *>" }]`: QA and the gate report it instead of failing it, and the delivery report names it. Never write one on your own
 judgement, and never to get past a check. qa.mjs exits 1 while anything fails.
+
+The full run and ship.mjs take minutes (a 60 s loop: ~4–5 min on an M2 Pro, more on a slower machine; a loop of real time is spent
+playing) — run them with `run_in_background` and wait for the notice, never as a foreground command that a time limit can cut off. A run
+uses one headless browser (≈ 1.4 GB; ≈ 2.6 GB for a film with much data); fine on a machine with 8 GB.
 The scripts open the film at its own aspect (the frame's `data-aspect`; `--w --h` override) and take the length target from its
 `data-length` (the kickoff answer); `--loop a,b` overrides it.
 **Don't rebuild while qa.mjs runs**: it reopens the page for several checks, and a rebuild mid-run mixes two versions (the report then
@@ -58,7 +62,7 @@ shows `stable — FAIL`). Take screenshots and probes between runs, or on a copy
 | fps | 540×960 at DPR 2 (= 1080×1920), ten segments | min ≥ 60 |
 | duration | playback clock vs wall clock | 1.00 |
 | drift | frame at t=2 before and after a full real-time loop (top 60%) | max diff 0 |
-| live | real-time playback captured continuously; dark squares with bright picture on all four sides (black blocks) | 0 |
+| live | the same real-time loop captured continuously; dark squares with bright picture on all four sides (black blocks) — each such frame checked against its moments drawn still (twice each): holes the still frames have too are the design (`design`), not a failure | 0 |
 
 ## 4. Looking (the part scripts can't do) — yours, then fresh eyes'
 
