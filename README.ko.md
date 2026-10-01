@@ -112,6 +112,11 @@ Studio는 내 컴퓨터(`127.0.0.1`)에서만 열려서, 밖에서는 접근할 
 GPU가 있으면 좋아요. 없어도 돌아가지만, Chrome이 소프트웨어 렌더링으로 그려서 느려요. macOS(Apple Silicon)에서 개발하고
 검증했어요. Linux에서도 될 거예요. Windows에서는 확인하지 못해서 WSL을 권해요.
 
+**메모리**: 8GB면 충분해요. 영상을 검사할 때는 헤드리스 브라우저 하나만 띄워요(약 1.4GB, 데이터가 많은 영상은
+2.6GB). MP4를 내보낼 때는 메모리의 절반에 들어가는 만큼만, 최대 네 개까지 띄워요. 8GB 맥에서는 대부분의 영상에 두
+개(인코더까지 약 3.5GB), 데이터가 많은 영상에는 한 개를 쓰고, 16GB M2 Pro에서는 네 개(약 5GB)를 써요.
+8GB라면 내보내는 동안 다른 무거운 앱은 닫아 두는 게 좋아요.
+
 ## 설치
 
 ### 플러그인으로 설치 (권장)
@@ -122,7 +127,13 @@ GPU가 있으면 좋아요. 없어도 돌아가지만, Chrome이 소프트웨어
 ```
 
 스크립트에 필요한 패키지는 Claude Code가 알아서 깔아 줘요. `/promptfilm`으로 시작하면 되고(정식 이름은 `/promptfilm:promptfilm`),
-모션그래픽을 만들어 달라고만 해도 저절로 시작돼요. 나중에 업데이트할 때는 셸에서 이렇게 실행하세요.
+모션그래픽을 만들어 달라고만 해도 저절로 시작돼요.
+
+**업데이트는 자동이에요.** 영상을 시작할 때마다 이 저장소에 새 버전이 있는지 확인하고(0.5초쯤, 오프라인이면 건너뜀), 있으면
+Claude Code의 `claude plugin update`로 설치한 뒤 같은 세션에서 바로 새 버전으로 이어서 작업해요. 끄려면
+`PROMPTFILM_NO_UPDATE=1`을 설정하세요. Claude Code 자체의 백그라운드 업데이트도 함께 켤 수 있어요: `/plugin` →
+**Marketplaces** → promptfilm → **Enable auto-update**. 2026년 10월 2일 이전에 설치한 버전은 아직 스스로 업데이트하지
+못하니, 셸에서 한 번만 이렇게 업데이트해 주세요.
 
 ```sh
 claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
@@ -139,7 +150,7 @@ cp -R promptfilm/skills/promptfilm ~/.claude/skills/
 
 ### 설치 확인
 
-Claude Code에 "promptfilm 셀프테스트 돌려줘"라고 하세요. 10분쯤 걸려요. 임시 폴더에 엔진 테스트 영상을 만들어 모든 검사를
+Claude Code에 "promptfilm 셀프테스트 돌려줘"라고 하세요. 5분쯤 걸려요. 임시 폴더에 엔진 테스트 영상을 만들어 모든 검사를
 돌리고, 일부러 심어 둔 결함을 검사가 잡아내는지도 확인해요.
 
 ## 사용법

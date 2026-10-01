@@ -112,6 +112,10 @@ The first run's setup needs no admin rights and removes nothing; after that, the
 Chrome falls back to software rendering, which is slow. Developed and tested on macOS (Apple Silicon). Linux should
 work; Windows is untested (WSL is the safer route).
 
+**Memory**: 8 GB is enough. Checking a film runs one headless browser (about 1.4 GB; 2.6 GB for a data-heavy film). The MP4 export
+opens as many as fit in half the memory, up to four: on an 8 GB Mac two for most films (about 3.5 GB with the encoder) and one for
+a data-heavy film, four on a 16 GB M2 Pro (about 5 GB). On 8 GB, close other heavy apps while it exports.
+
 ## Install
 
 ### As a plugin (recommended)
@@ -122,7 +126,13 @@ work; Windows is untested (WSL is the safer route).
 ```
 
 Claude Code installs the scripts' packages for you. Start the skill with `/promptfilm` (its full name is `/promptfilm:promptfilm`); it
-also starts by itself when you ask for a motion graphic. To update later, from a shell:
+also starts by itself when you ask for a motion graphic.
+
+**Updates are automatic.** Each time a film starts, promptfilm asks this repository for its newest version (about half a second; skipped
+when offline) and, when there is one, installs it with Claude Code's own `claude plugin update` and carries on with it in the same
+session. To turn this off, set `PROMPTFILM_NO_UPDATE=1`. Claude Code's own background updates can be on as well: `/plugin` →
+**Marketplaces** → promptfilm → **Enable auto-update**. If your copy is older than October 2, 2026, it doesn't update itself yet;
+update it once from a shell:
 
 ```sh
 claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
@@ -139,7 +149,7 @@ The skill is then `/promptfilm`, and its first run installs the packages.
 
 ### Check your setup
 
-Ask Claude Code to **"run the promptfilm selftest"**. It takes about 10 minutes: it builds the engine's test films in a temporary folder
+Ask Claude Code to **"run the promptfilm selftest"**. It takes about 5 minutes: it builds the engine's test films in a temporary folder
 and runs every check, including checks that must catch planted faults.
 
 ## Usage
