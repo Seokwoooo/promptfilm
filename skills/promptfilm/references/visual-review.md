@@ -5,6 +5,22 @@ nothing wrong. The requester saw, within seconds: "far too much is skipped" and 
 builder looks for confirmation of what they meant to make; this review looks for what the viewer will actually see. No final video is
 made of a build without it (scripts/gate.mjs — render.mjs refuses; the Studio's export card says so).
 
+## 0. Severity, settled decisions, and what has already been measured
+
+**Every finding carries a severity.** `blocking` = you would not post the video with this in it. `minor` = you would post it and
+fix this later. Write it as the last field of the line. The verdict does not change (PASS still needs "- none"), but the maker has to
+know which two of thirty to fix first, and a review that calls everything equally wrong cannot be acted on.
+
+**§0 of the form lists what the requester has already settled** (`<film>/qa/review-accepted.json`). Those are not findings. If you
+think one has become wrong, say so in §5 as a note. The file holds the requester's own words — it is never written on the maker's
+judgement, exactly like `qa/accepted.json` for the automated checks (qa.md §3).
+
+**§0b lists what the automated checks measured on this build** — camera jumps, the loop's seam, how much of the loop the camera
+holds, determinism. Those ran on every frame; the sheets you are given are 0.5 s apart. **Two cells of a moving stretch look nothing
+alike, and that is the sampling, not a cut.** Each sheet frame is labelled with its beat for exactly this reason: `hook` and `key`
+are holds, `normal`, `transit` and `return` are moves. Do not write "a hard cut", "the loop does not close" or "nothing changes" against
+a number in §0b; if your eye disagrees, put it in §5 with the frame that shows it.
+
 ## 1. Who reviews, with what
 
 **Someone who did not build the film.** With the Agent tool, give the review to a fresh subagent (general-purpose): this file, the
@@ -72,8 +88,8 @@ thing large with its parts named; the part the camera goes into next outlined be
   checks every code: a sheet not opened is a review not done.)
 - §4: what each QA-flagged frame is (a real problem, or why not — with the reason visible in the frame).
 - §5: one line per kind of failure listed in §3 of this file.
-- Findings: `- time — what — kind`, kind one of broken · skipped · empty · smeared · mock-up · wrong · appearing · text.
-- **Findings**: one line each — `- 24.0 s — the section seen edge-on reads as horizontal bands — broken`. "- none" only if there are none.
+- Findings: `- time — what — kind — blocking|minor`, kind one of broken · skipped · empty · smeared · mock-up · wrong · appearing · text.
+- **Findings**: one line each — `- 24.0 s — the section seen edge-on reads as horizontal bands — broken — blocking`. "- none" only if there are none.
 - **Verdict: PASS** only when every caption is "yes", every sheet "nothing" and Findings is exactly "- none"; otherwise **Verdict: FAIL**.
   The gate reads all of it: a PASS over a "no", a problem, a finding or a wrong code is not a pass; a FAIL stays on record for that build
   (`qa/reviews/`), so the build must change before it can pass.

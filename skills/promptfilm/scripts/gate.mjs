@@ -24,9 +24,15 @@ export function parseReview(text) {
   return { build: b ? b[1] : null, verdict: v ? v[1].toUpperCase() : null, bare: rows(section('1')), captions: rows(section('2')), sheets: rows(section('3')), findings: flines };
 }
 
+// decisions the requester has already made (qa/review-accepted.json) — same discipline as qa/accepted.json:
+// only their own words, never the builder's judgement. A review line that matches one stops counting against the gate.
+const settledFor = qaDir => { try { return JSON.parse(fs.readFileSync(path.join(qaDir, 'review-accepted.json'), 'utf8')) || []; } catch (e) { return []; } };
+const settledHit = (list, text) => list.some(a => a && a.match && String(text).toLowerCase().includes(String(a.match).toLowerCase()));
+
 export function gateStatus(htmlFile) {
   const dir = path.dirname(path.resolve(htmlFile)), qaDir = path.join(dir, 'qa');
   let hash = null; try { hash = buildHash(fs.readFileSync(htmlFile, 'utf8')); } catch (e) { return { ok: false, codes: ['no-film'], why: ['no such film: ' + htmlFile] }; }
+  const SETTLED = settledFor(qaDir);
   const st = { hash, qa: { exists: false }, review: { exists: false }, why: [], codes: [] };
   const no = (code, why) => { st.codes.push(code); st.why.push(why); };
   try {
@@ -48,16 +54,26 @@ export function gateStatus(htmlFile) {
     else {
       if (p.sheets.length !== meta.sheets.length) problems.push(`§3 has ${p.sheets.length} sheet rows, the material ${meta.sheets.length}`);
       p.sheets.forEach((r, i) => { const m = meta.sheets[i]; if (!m) return;
-        if (codeHash(r[1] || '', hash) !== m.code) problems.push(`sheet ${i + 1}: its code is missing or wrong (the code is printed on the sheet's first frame)`);
-        if (!/^nothing\b/i.test(r[3] || '')) problems.push(`sheet ${i + 1}: "${(r[3] || '').slice(0, 60)}"`); });
+        if (codeHash(r[1] || '', hash) !== (m.codeHash || m.code)) problems.push(`sheet ${i + 1}: its code is missing or wrong (the code is printed on the sheet's first frame)`);
+        const live = (r[3] || '').split('·').map(x => x.trim()).filter(x => x && !settledHit(SETTLED, x));
+        if (!/^nothing\b/i.test(r[3] || '') && live.length) problems.push(`sheet ${i + 1}: "${live.join(' · ').slice(0, 60)}"`); });
       if (p.bare.length !== meta.captions) problems.push(`§1 has ${p.bare.length} bare-frame rows, the film ${meta.captions} captions`);
       p.bare.forEach((r, i) => { if ((r[2] || '').length < 4) problems.push(`§1 frame ${i + 1}: "what the frame shows" is not written`); });
       if (p.captions.length !== meta.captions) problems.push(`§2 has ${p.captions.length} caption rows, the film ${meta.captions}`);
-      p.captions.forEach((r, i) => { if (/way back/i.test(r[1] || '')) return; if (!/^yes\b/i.test(r[r.length - 1] || '')) problems.push(`caption ${i + 1}: "${(r[r.length - 1] || '(empty)').slice(0, 60)}"`); });
+      p.captions.forEach((r, i) => { if (/way back/i.test(r[1] || '')) return; const a = r[r.length - 1] || '';
+        if (!/^yes\b/i.test(a) && !settledHit(SETTLED, a)) problems.push(`caption ${i + 1}: "${(a || '(empty)').slice(0, 60)}"`); });
     }
-    const clean = p.findings.length === 1 && /^[-*]\s*none\.?$/i.test(p.findings[0]);
-    if (!clean) problems.push(p.findings.length ? `${p.findings.length} finding line(s)` : 'no Findings section');
-    st.review = { exists: true, sameBuild: p.build === hash, verdict: p.verdict, pass: p.build === hash && p.verdict === 'PASS' && problems.length === 0 && !failedBefore, problems: problems.slice(0, 8) };
+    const noneLine = p.findings.length === 1 && /^[-*]\s*none\.?$/i.test(p.findings[0]);
+    const liveF = noneLine ? [] : p.findings.filter(l => !settledHit(SETTLED, l));
+    const sevOf = l => { const tail = (String(l).split('\u2014').pop() || '').trim().toLowerCase();
+      return /^blocking\b/.test(tail) ? 'blocking' : /^minor\b/.test(tail) ? 'minor' : /\bblocking\s*\.?$/i.test(l) ? 'blocking' : ''; };
+    const blockingN = liveF.filter(l => sevOf(l) === 'blocking').length, minorN = liveF.length - blockingN;
+    const settledN = noneLine ? 0 : p.findings.length - liveF.length;
+    if (!p.findings.length) problems.push('no Findings section');
+    else if (liveF.length) problems.push(`${liveF.length} finding line(s)`
+      + (blockingN ? ` — ${blockingN} blocking, ${minorN} minor` : '')
+      + (settledN ? ` (${settledN} settled)` : ''));
+    st.review = { exists: true, blocking: blockingN, minor: minorN, settled: settledN, sameBuild: p.build === hash, verdict: p.verdict, pass: p.build === hash && p.verdict === 'PASS' && problems.length === 0 && !failedBefore, problems: problems.slice(0, 8) };
   } catch (e) { /* no review yet */ }
   if (failedBefore) no('review-failed', 'this build already failed a visual review — fix what it found, rebuild, full QA, review again');
   else if (!st.review.exists) no('review-none', 'no visual review — scripts/review.mjs, then a fresh reviewer fills in the form (references/visual-review.md) as qa/visual-review.md');
