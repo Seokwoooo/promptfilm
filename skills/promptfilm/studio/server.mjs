@@ -2,12 +2,16 @@
 // Promptfilm Studio — a local server for looking at films the way an editor does: play and scrub them on a timeline (beats,
 // captions, comments), change the pace of a beat, pin review comments on the frame (saved to review.json, with a snapshot, for
 // Claude to read and answer), and render the MP4.
-//   node studio/server.mjs [root=.] [--film <id>] [--view board|film] [--port 4870] [--no-open]
+//   node studio/server.mjs [root=.] [--film <id>] [--view board|film] [--port 4870] [--no-open] [--tailnet]
 // It opens the page in the browser (on --film when given) — or, when a Studio page is already open, switches that page to the film.
 // Run it again at any time: when a Studio for this root is already running, it only opens / switches the page and exits.
 // Films are found under root: a folder with build.sh + parts/ (made by new_film.sh), or single .html films with the engine's hooks.
 // Everything stays on this machine: the server listens on 127.0.0.1 only and reads and writes only under root.
+// --tailnet (or PROMPTFILM_TAILNET=1) adds a second listener on this machine's own Tailscale addresses, so the
+// Studio opens on a phone over the tailnet. It is off by default, and it never binds 0.0.0.0: the port stays shut
+// on every other interface, so a café wifi cannot reach it.
 import http from 'http';
+import os from 'os';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
@@ -24,6 +28,7 @@ const opt = (name, def) => { const i = argv.indexOf('--' + name); return i >= 0 
 const ROOT = path.resolve(argv.find((a, i) => !a.startsWith('--') && !['--port', '--film', '--view'].includes(argv[i - 1])) || '.');
 const PORT0 = +opt('port', 4870);
 const OPEN = !argv.includes('--no-open'), FILM_ARG = opt('film', null), VIEW_ARG = opt('view', null);
+const TAILNET = argv.includes('--tailnet') || /^(1|true|yes)$/i.test(process.env.PROMPTFILM_TAILNET || '');
 let PORT = PORT0;
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -508,17 +513,17 @@ function underRoot(relPath) {
 const uiVersion = () => VERSION + ':' + ['index.html', 'studio.js', 'studio.css'].map(f => { try { return Math.round(fs.statSync(path.join(UI, f)).mtimeMs); } catch (e) { return 0; } }).join('.');
 for (const f of ['index.html', 'studio.js', 'studio.css']) watch(path.join(UI, f), () => broadcast('ui', { ui: uiVersion() }));   // the page's code changed (the skill was updated)
 
-const server = http.createServer(async (req, res) => {
+const handler = async (req, res) => {
   const u = new URL(req.url, 'http://127.0.0.1'), p = decodeURIComponent(u.pathname), q = u.searchParams;
   try {
-    if (req.headers.host && !/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host)) { res.writeHead(403); return res.end(); }   // no DNS rebinding
+    if (req.headers.host && !HOST_OK.test(req.headers.host)) { res.writeHead(403); return res.end(); }   // no DNS rebinding
     // a page of another site can't reach the API, not even with a GET that only starts work (browsers name the caller in
     // Sec-Fetch-Site; this page is same-origin, the scripts send none)
     if (p.startsWith('/api/') && /^(cross-site|same-site)$/.test(req.headers['sec-fetch-site'] || '')) { res.writeHead(403); return res.end(); }
     // only this page may change things: a POST must be JSON (a cross-site form can't send that without a preflight we never answer)
     // and, when the browser names its origin, come from this server
     if (req.method === 'POST' && (!/^application\/json/.test(req.headers['content-type'] || '') ||
-        (req.headers.origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(req.headers.origin)))) { res.writeHead(403); return res.end('forbidden'); }
+        (req.headers.origin && !ORIGIN_OK.test(req.headers.origin)))) { res.writeHead(403); return res.end('forbidden'); }
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');                    // other sites can't embed or read these files
     if (req.method === 'GET' && (p === '/' || p === '/index.html')) return sendFile(req, res, path.join(UI, 'index.html'));
     if (req.method === 'GET' && p.startsWith('/ui/')) { const abs = path.resolve(UI, p.slice(4)); if (!abs.startsWith(UI + path.sep)) { res.writeHead(403); return res.end(); } return sendFile(req, res, abs); }
@@ -583,7 +588,8 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) json(res, e.code >= 400 && e.code < 600 ? e.code : 500, { error: e.message });
     else res.end();
   }
-});
+};
+const server = http.createServer(handler);
 
 // Is a Studio already on this port? (null: something else, or nothing)
 async function occupant(port) {
@@ -615,12 +621,36 @@ function listen(port) {                                         // one attempt: 
   server.once('error', onError); server.once('listening', onListen);
   server.listen(port, '127.0.0.1');
 }
+
+/* ---------- the tailnet (--tailnet / PROMPTFILM_TAILNET=1): a second listener, so the Studio opens on a phone ----------
+   Off by default. When it is on the server binds 127.0.0.1 AND this machine's Tailscale addresses — and nothing else:
+   0.0.0.0 is never bound, so the port stays shut on every other interface. The DNS-rebinding guard and the POST origin
+   check widen to the tailnet and to MagicDNS names, and to nothing beyond them. */
+const TAILNET_V4 = /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./;          // 100.64.0.0/10, Tailscale's CGNAT range
+const TAILNET_V6 = /^fd7a:115c:a1e0:/i;
+const tailnetAddrs = () => !TAILNET ? [] : Object.values(os.networkInterfaces()).flatMap(a => (a || [])
+  .filter(x => (x.family === 'IPv4' || x.family === 4) ? TAILNET_V4.test(x.address) : TAILNET_V6.test(x.address))
+  .map(x => x.address));
+const HOST_OK = TAILNET
+  ? /^(127\.0\.0\.1|localhost|\[::1\]|100\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[fd7a:115c:a1e0:[0-9a-f:]*\]|[a-z0-9-]+(\.[a-z0-9-]+)*\.ts\.net)(:\d+)?$/i
+  : /^(127\.0\.0\.1|localhost)(:\d+)?$/;
+const ORIGIN_OK = TAILNET
+  ? /^http:\/\/(127\.0\.0\.1|localhost|100\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[fd7a:115c:a1e0:[0-9a-f:]*\]|[a-z0-9-]+(\.[a-z0-9-]+)*\.ts\.net):\d+$/i
+  : /^http:\/\/(127\.0\.0\.1|localhost):\d+$/;
+const TAIL_URLS = [];
+const listenTailnet = port => Promise.all(tailnetAddrs().map(ip => new Promise(done => {
+  const s2 = http.createServer(handler);
+  s2.on('error', e => { if (e.code !== 'EADDRNOTAVAIL') console.error(`  tailnet ${ip}: ${e.message}`); done(); });
+  s2.listen(port, ip, () => { TAIL_URLS.push(`http://${ip.includes(':') ? '[' + ip + ']' : ip}:${port}/`); done(); });
+})));
+
 async function started(port) {
+  await listenTailnet(port);
   try { await fsp.mkdir(path.join(ROOT, '.promptfilm'), { recursive: true });
-    await fsp.writeFile(path.join(ROOT, '.promptfilm', 'studio.json'), JSON.stringify({ port, pid: process.pid, root: ROOT, url: pageUrl(), version: VERSION, started: new Date().toISOString() }, null, 2) + '\n'); } catch (e) {}
+    await fsp.writeFile(path.join(ROOT, '.promptfilm', 'studio.json'), JSON.stringify({ port, pid: process.pid, root: ROOT, url: pageUrl(), tailnet: TAIL_URLS, version: VERSION, started: new Date().toISOString() }, null, 2) + '\n'); } catch (e) {}
   FILMS = await scan();
   const url = pageUrl();
-  console.log(`Promptfilm Studio  ${url}\n  root   ${ROOT}\n  films  ${FILMS.length ? FILMS.map(f => f.id).join(', ') : '(none yet — films appear here as they are made)'}`);
+  console.log(`Promptfilm Studio  ${url}\n  root   ${ROOT}\n  films  ${FILMS.length ? FILMS.map(f => f.id).join(', ') : '(none yet — films appear here as they are made)'}${TAIL_URLS.map(u => '\n  phone  ' + u).join('')}`);
   // open the page — after a moment, so a page left open from before (it reconnects within a second or three) is used instead
   if (OPEN) setTimeout(() => openPage(FILM_ARG, VIEW_ARG).then(r => console.log(r.opened ? `  opened ${r.url}` : `  a Studio page is open${FILM_ARG ? ' — switched it to ' + FILM_ARG : ''}`),
     e => { console.log(`  ${e.message}`); openBrowser(pageUrl()); }), 3000);

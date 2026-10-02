@@ -24,7 +24,12 @@ Studio lists it, e.g. `undersea-cable`).
   shown by itself. The link to give in a message is `http://127.0.0.1:<port>/#film=<film-id>`.
 - It prints `http://127.0.0.1:4870/` and writes its port to `<working-dir>/.promptfilm/studio.json`, where await.mjs reads it. It listens on
   127.0.0.1 only, reads and writes only under the working directory, needs nothing beyond what setup.sh installs (the packages, a Chrome,
-  ffmpeg). Films are found up to four folders deep: a folder with `build.sh` + `parts/` (from new_film.sh; its versions
+  ffmpeg).
+- **On a phone** (`--tailnet`, or `PROMPTFILM_TAILNET=1` once in the environment): the server also listens on this machine's own
+  Tailscale addresses and prints them as `phone  http://100.x.y.z:4870/` (also in `studio.json` as `tailnet`). Give that link with
+  `#film=<film-id>`. It is off by default, and even when it is on the server never binds `0.0.0.0`: the port stays shut on every other
+  interface, so a café wifi cannot reach it. The DNS-rebinding guard and the POST origin check widen to the tailnet and to MagicDNS
+  (`*.ts.net`) and to nothing else. Needs no Tailscale CLI — the addresses come from the machine's own interfaces. Films are found up to four folders deep: a folder with `build.sh` + `parts/` (from new_film.sh; its versions
   `<name>.v<N>.html` are selectable) or single `.html` films with the engine's hooks (older films included — they play, take comments and
   render; they have no beats or captions to show).
 - **Light on the machine**: idle, the server is one small node process. A headless Chrome runs only while a comment's snapshot or the
