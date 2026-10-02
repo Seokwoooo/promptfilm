@@ -44,14 +44,16 @@ sh <skill>/scripts/setup.sh --model <your exact model id> --lang ko|en      (ko 
   download about 200 MB and take a few minutes (run it with a 10-minute timeout); tell the requester in one line that you are getting
   the tools ready, and afterwards what was installed. When it ends with `SETUP MISSING …` lines, show them to the requester with the
   command to run (they can type it with a `!` in front), wait until it is done, and run setup.sh again — no film can be made without them.
-- **Updates** (update.mjs, first): installed as a Claude Code plugin, promptfilm looks for a newer version on its marketplace — and
-  installs nothing unless the requester says so. When setup prints `setup: a newer promptfilm is out: <old> → <new> …`, ask them once
-  (one AskUserQuestion call in their language, apart from the kickoff question; put the "what changed" link in the question): update
-  now (recommended) · always update automatically · not now — then run `node <skill>/scripts/update.mjs --install`, `--always` or
-  `--skip`. When a run prints `setup: promptfilm updated <old> → <new>. From now on <skill> is <path> …` (after their answer, or by
-  itself for a requester who chose always or whose newer version is already installed), say so in one line, read the SKILL.md in that
-  folder and follow it from step 0, with that path as `<skill>` in every command. Never update on your own; when they ask to be asked
-  again after choosing always, run `update.mjs --ask`. A line saying a version could not be installed: show it as it is and go on.
+- **Updates** (update.mjs, first): promptfilm updates the way Claude Code updates plugins — with Claude Code's own auto-update for its
+  marketplace (/plugin → Marketplaces → Enable auto-update). Installed as a plugin, setup looks for a newer version: with auto-update
+  on it installs it at once, with it off it does nothing, and when it was never set it prints `setup: a newer promptfilm is out: …
+  ask the requester`. Then ask once (one AskUserQuestion call in their language, apart from the kickoff question; the "what changed"
+  link in it): turn on automatic updates (recommended — Claude Code then keeps promptfilm current by itself and nobody asks again) ·
+  update just this once · don't update — and run `node <skill>/scripts/update.mjs --auto-on`, `--install` or `--auto-off`. When a
+  run prints `setup: promptfilm updated <old> → <new>. From now on <skill> is <path> …`, say so in one line, read the SKILL.md in that
+  folder and follow it from step 0, with that path as `<skill>` in every command. Never update on your own; when the requester later
+  asks to update, or to switch automatic updates on or off, run the same commands. A line saying a version could not be installed:
+  show it as it is and go on.
 - **Environment notice** (env_check.mjs, printed last): pass the model id your instructions give you (e.g. `claude-opus-5-5`); a model
   that isn't Claude passes its own name. In any host that is not Claude Code the notice always shows (the script tells the host from the
   processes that launched it). If it prints a ⚠️ notice, show it to the requester as it is (translated, when they speak neither Korean
@@ -250,5 +252,5 @@ before delivering. And never call a film finished, or render its final video, be
 | scripts/ship.mjs | step 6: build → full QA → the review's material and brief → the gate, in one command |
 | scripts/review.mjs · scripts/gate.mjs | step 6: the visual review's material · is this build READY (full QA + visual review)? |
 | scripts/setup.sh | step 0: installs what this machine is missing (setup.mjs), then the environment notice (env_check.mjs: host, model, effort) |
-| scripts/update.mjs | step 0, run by setup.sh first: is a newer promptfilm out? — installed only when the requester says so (`--install` · `--always` · `--skip` · `--ask`) |
+| scripts/update.mjs | step 0, run by setup.sh first: a newer promptfilm, through Claude Code's own auto-update switch (`--auto-on` · `--install` · `--auto-off`) |
 | scripts/selftest.mjs | after changing the engine, the scripts or the Studio (and on a new machine): the skill checks itself end to end |

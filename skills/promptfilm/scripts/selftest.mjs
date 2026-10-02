@@ -145,29 +145,33 @@ function applySceneOk(tau, tp, field) {`);
       `a fitting plan passes · 12 short cards: ${many.code === 1 ? 'refused' : 'NOT refused'} · 5 stops 32 decades apart in 35 s: ${deep.code === 1 ? 'refused' : 'NOT refused'}${ok.code ? ' · the fitting plan was refused: ' + ok.out.split('\n').slice(-4).join(' ') : ''}`);
   });
 
-  // 2c') newer versions (scripts/update.mjs), in a home folder of its own: an older plugin install announces the newer commit and installs
-  //      nothing; "not now" is remembered for that version; with "always" it would install; the newest install, and a copy outside a
-  //      plugin install, are left alone; a newer version already installed is switched to
+  // 2c') newer versions (scripts/update.mjs), with a Claude Code config and a home folder of its own: never set, an older plugin install
+  //      announces the newer commit and installs nothing; --auto-off writes Claude Code's switch (marketplace record and settings) and
+  //      nothing is asked again; with the switch on it would install; the newest install and a copy outside a plugin install are left
+  //      alone; a newer version already installed is switched to
   await step('updates', async () => {
-    const d = path.join(TMP, 'upd'), work = path.join(d, 'w'), repo = path.join(d, 'pf.git'), home = path.join(d, 'home'), g = (...a) => execFileSync('git', a, { cwd: work, encoding: 'utf8' }).trim();
-    fs.mkdirSync(work, { recursive: true }); fs.mkdirSync(home, { recursive: true }); fs.writeFileSync(path.join(work, 'README.md'), 'test\n');
+    const d = path.join(TMP, 'upd'), work = path.join(d, 'w'), repo = path.join(d, 'pf.git'), cfg = path.join(d, 'cfg'), g = (...a) => execFileSync('git', a, { cwd: work, encoding: 'utf8' }).trim();
+    for (const x of [work, path.join(d, 'home'), path.join(cfg, 'plugins')]) fs.mkdirSync(x, { recursive: true });
+    fs.writeFileSync(path.join(work, 'README.md'), 'test\n');
     g('init', '-q'); g('add', '-A'); g('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 't'); execFileSync('git', ['clone', '-q', '--bare', work, repo]);
-    const head = g('rev-parse', 'HEAD').slice(0, 12), U = path.join(SKILL, 'scripts', 'update.mjs');
-    fs.mkdirSync(path.join(d, 'plugins'), { recursive: true });
-    fs.writeFileSync(path.join(d, 'plugins', 'known_marketplaces.json'), JSON.stringify({ pf: { source: { source: 'git', url: 'file://' + repo } } }));
-    const at = v => { const s = path.join(d, 'plugins', 'cache', 'pf', 'promptfilm', v, 'skills', 'promptfilm'); fs.mkdirSync(s, { recursive: true }); return s; };
-    const env = { ...process.env, HOME: home, USERPROFILE: home, PROMPTFILM_NO_UPDATE: '' }, old = at('000000000000');
+    const head = g('rev-parse', 'HEAD').slice(0, 12), U = path.join(SKILL, 'scripts', 'update.mjs'), source = { source: 'git', url: 'file://' + repo };
+    const KN = path.join(cfg, 'plugins', 'known_marketplaces.json'), ST = path.join(cfg, 'settings.json'), J = f => JSON.parse(fs.readFileSync(f, 'utf8'));
+    fs.writeFileSync(KN, JSON.stringify({ pf: { source } }, null, 2)); fs.writeFileSync(ST, JSON.stringify({ extraKnownMarketplaces: { pf: { source } } }, null, 2) + '\n');
+    const at = v => { const s = path.join(cfg, 'plugins', 'cache', 'pf', 'promptfilm', v, 'skills', 'promptfilm'); fs.mkdirSync(s, { recursive: true }); return s; };
+    const env = { ...process.env, HOME: path.join(d, 'home'), USERPROFILE: path.join(d, 'home'), CLAUDE_CONFIG_DIR: cfg, PROMPTFILM_NO_UPDATE: '' }, old = at('000000000000');
     const u = async (...a) => (await run(process.execPath, [U, ...a], { env })).out.trim();
-    const asked = await u('--skill', old), skipped = await u('--skill', old, '--skip'), again = await u('--skill', old);
-    fs.writeFileSync(path.join(home, '.promptfilm', 'update.json'), JSON.stringify({ ...JSON.parse(fs.readFileSync(path.join(home, '.promptfilm', 'update.json'), 'utf8')), mode: 'auto' }));
-    const auto = await u('--skill', old, '--dry'), cur = await u('--skill', at(head)), here = await u();
+    const asked = await u('--skill', old), off = await u('--skill', old, '--auto-off'), offFlags = [J(KN).pf.autoUpdate, J(ST).extraKnownMarketplaces.pf.autoUpdate], quiet = await u('--skill', old);
+    const kn = J(KN); kn.pf.autoUpdate = true; fs.writeFileSync(KN, JSON.stringify(kn, null, 2));                       // the /plugin switch turned on
+    const st = J(ST); delete st.extraKnownMarketplaces.pf.autoUpdate; fs.writeFileSync(ST, JSON.stringify(st, null, 2) + '\n');
+    const on = await u('--skill', old, '--dry'), cur = await u('--skill', at(head)), here = await u();
     fs.writeFileSync(path.join(at(head), 'SKILL.md'), '# test\n');
     const sw = await u('--skill', old);
     fs.rmSync(d, { recursive: true, force: true });
-    const ok = { asked: asked.includes(`a newer promptfilm is out: 0000000 → ${head.slice(0, 7)}`) && asked.includes('Nothing was installed'), skipped: /staying on/.test(skipped) && !again,
-      auto: auto.includes(`would update promptfilm@pf 000000000000 → ${head}`), cur: !cur, here: !here, sw: sw.includes(`PF_SKILL=${at(head)}`) };
-    check('updates', Object.values(ok).every(Boolean), Object.entries(ok).filter(([, v]) => !v).length ? 'FAILED: ' + Object.entries(ok).filter(([, v]) => !v).map(([k]) => k).join(', ') + ` · ${asked} | ${again} | ${auto}`
-      : 'an older install asks, installs nothing · "not now" remembered · "always" installs · the newest and a copy outside a plugin: left alone · an installed newer version: switched to');
+    const ok = { asked: asked.includes(`a newer promptfilm is out: 0000000 → ${head.slice(0, 7)}`) && asked.includes('not set'), off: /is off/.test(off) && offFlags.every(x => x === false) && !quiet,
+      on: on.includes(`would update promptfilm@pf 000000000000 → ${head}`), cur: !cur, here: !here, sw: sw.includes(`PF_SKILL=${at(head)}`) };
+    const bad = Object.entries(ok).filter(([, v]) => !v).map(([k]) => k);
+    check('updates', !bad.length, bad.length ? `FAILED: ${bad.join(', ')} · ${asked} | ${off} ${offFlags} | ${quiet} | ${on}`
+      : 'never set: asks, installs nothing · off: Claude Code\'s switch written, nothing asked again · on: updates · the newest and a copy outside a plugin: left alone · an installed newer version: switched to');
   });
 
   // 2d) the visual review's material, and the delivery gate: no final video of a build without a passing full QA and a passing review

@@ -165,8 +165,8 @@
     },
     {
       "id": 28,
-      "prompt": "(setup.sh prints: setup: a newer promptfilm is out: 9d47862 → 4c1e0aa — what changed: https://github.com/Seokwoooo/promptfilm/compare/9d47862e3cd6...4c1e0aa91b2f. Nothing was installed: ask the requester (SKILL.md step 0)) /promptfilm 해저 케이블 모션그래픽 만들어줘",
-      "expected_output": "Installs nothing on its own. Asks once, in Korean, with one AskUserQuestion call separate from the kickoff question, showing the versions and the what-changed link: 지금 업데이트 (권장) · 항상 자동으로 · 이번엔 건너뛰기. Then runs `node <skill>/scripts/update.mjs --install`, `--always` or `--skip` accordingly; after an update it reads the new SKILL.md and goes on from step 0 with the new path; after 'not now' it goes on with the current version (the kickoff question next).",
+      "prompt": "(setup.sh prints: setup: a newer promptfilm is out: 9d47862 → 4c1e0aa — what changed: https://github.com/Seokwoooo/promptfilm/compare/9d47862e3cd6...4c1e0aa91b2f. Claude Code's auto-update for promptfilm is not set: ask the requester (SKILL.md step 0)) /promptfilm 해저 케이블 모션그래픽 만들어줘",
+      "expected_output": "Installs nothing on its own. Asks once, in Korean, with one AskUserQuestion call separate from the kickoff question, showing the versions and the what-changed link: 자동 업데이트 켜기 (권장 — Claude Code가 알아서 최신 유지) · 이번만 업데이트 · 업데이트 안 함. Then runs `node <skill>/scripts/update.mjs --auto-on`, `--install` or `--auto-off` accordingly; after an update it reads the new SKILL.md and goes on from step 0 with the new path; after 'don't update' it goes on with the current version (the kickoff question next).",
       "files": []
     }
   ]

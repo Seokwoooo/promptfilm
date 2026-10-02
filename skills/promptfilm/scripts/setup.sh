@@ -20,9 +20,9 @@ if ! node_ok; then
   esac
   exit 3
 fi
-# promptfilm itself (update.mjs): installed as a Claude Code plugin, a newer version on its marketplace is announced for Claude to ask
-# the requester about; when they chose to always update, or it is installed already, this run goes on with it — its setup, its notice,
-# its skill folder (PROMPTFILM_NO_UPDATE=1: no check)
+# promptfilm itself (update.mjs): installed as a Claude Code plugin, a newer version on its marketplace is installed when Claude Code's
+# auto-update for it is on (or was already installed), and this run goes on with it — its setup, its notice, its skill folder; never
+# set, Claude asks the requester once (PROMPTFILM_NO_UPDATE=1: no check)
 if [ $check_only = 0 ] && [ -z "$PROMPTFILM_NO_UPDATE" ]; then
   up=$(node "$HERE/update.mjs" 2>/dev/null)
   [ -n "$up" ] && printf '%s\n' "$up" | grep -v '^PF_SKILL='
