@@ -128,12 +128,11 @@ a data-heavy film, four on a 16 GB M2 Pro (about 5 GB). On 8 GB, close other hea
 Claude Code installs the scripts' packages for you. Start the skill with `/promptfilm` (its full name is `/promptfilm:promptfilm`); it
 also starts by itself when you ask for a motion graphic.
 
-**Updates.** Each time a film starts, promptfilm checks this repository for a newer version (about half a second; skipped when
-offline). It installs nothing on its own: Claude asks you — update now, always update automatically, or not now. An update is
-installed with Claude Code's own `claude plugin update` and the session carries on with it at once; "not now" isn't asked again
-for that version. Changed your mind after "always"? Ask Claude to ask before updates again. To turn the check off, set
-`PROMPTFILM_NO_UPDATE=1`. You can also let Claude Code update it in the background: `/plugin` → **Marketplaces** → promptfilm →
-**Enable auto-update**. Copies installed before October 2, 2026 don't check yet; update those once from a shell:
+**Updates.** promptfilm updates the way Claude Code updates plugins: with Claude Code's own auto-update for its marketplace. The
+first time a newer version is out, Claude asks you once whether to turn it on — the same switch as `/plugin` → **Marketplaces** →
+promptfilm → **Enable auto-update**. On, and Claude Code keeps promptfilm current by itself (a film that starts also picks up a newer
+version at once); off, and nothing changes until you update. Flip it any time in `/plugin`, or ask Claude. To skip the check
+entirely, set `PROMPTFILM_NO_UPDATE=1`. Copies installed before October 2, 2026 don't check yet; update those once from a shell:
 
 ```sh
 claude plugin marketplace update promptfilm && claude plugin update promptfilm@promptfilm
