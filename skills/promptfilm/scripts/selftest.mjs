@@ -145,22 +145,29 @@ function applySceneOk(tau, tp, field) {`);
       `a fitting plan passes · 12 short cards: ${many.code === 1 ? 'refused' : 'NOT refused'} · 5 stops 32 decades apart in 35 s: ${deep.code === 1 ? 'refused' : 'NOT refused'}${ok.code ? ' · the fitting plan was refused: ' + ok.out.split('\n').slice(-4).join(' ') : ''}`);
   });
 
-  // 2c') keeping itself up to date (scripts/update.mjs): a plugin install sees that its marketplace has a newer commit, an installed copy
-  //      of that commit sees nothing to do, a copy outside a plugin install is left alone (--dry: nothing is installed)
-  await step('self-update', async () => {
-    const d = path.join(TMP, 'upd'), work = path.join(d, 'w'), repo = path.join(d, 'pf.git'), g = (...a) => execFileSync('git', a, { cwd: work, encoding: 'utf8' }).trim();
-    fs.mkdirSync(work, { recursive: true }); fs.writeFileSync(path.join(work, 'README.md'), 'test\n');
+  // 2c') newer versions (scripts/update.mjs), in a home folder of its own: an older plugin install announces the newer commit and installs
+  //      nothing; "not now" is remembered for that version; with "always" it would install; the newest install, and a copy outside a
+  //      plugin install, are left alone; a newer version already installed is switched to
+  await step('updates', async () => {
+    const d = path.join(TMP, 'upd'), work = path.join(d, 'w'), repo = path.join(d, 'pf.git'), home = path.join(d, 'home'), g = (...a) => execFileSync('git', a, { cwd: work, encoding: 'utf8' }).trim();
+    fs.mkdirSync(work, { recursive: true }); fs.mkdirSync(home, { recursive: true }); fs.writeFileSync(path.join(work, 'README.md'), 'test\n');
     g('init', '-q'); g('add', '-A'); g('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 't'); execFileSync('git', ['clone', '-q', '--bare', work, repo]);
     const head = g('rev-parse', 'HEAD').slice(0, 12), U = path.join(SKILL, 'scripts', 'update.mjs');
     fs.mkdirSync(path.join(d, 'plugins'), { recursive: true });
     fs.writeFileSync(path.join(d, 'plugins', 'known_marketplaces.json'), JSON.stringify({ pf: { source: { source: 'git', url: 'file://' + repo } } }));
     const at = v => { const s = path.join(d, 'plugins', 'cache', 'pf', 'promptfilm', v, 'skills', 'promptfilm'); fs.mkdirSync(s, { recursive: true }); return s; };
-    const env = { ...process.env, PROMPTFILM_NO_UPDATE: '' };
-    const old = await run(process.execPath, [U, '--dry', '--skill', at('000000000000')], { env }), cur = await run(process.execPath, [U, '--dry', '--skill', at(head)], { env });
-    const here = await run(process.execPath, [U, '--dry'], { env });
+    const env = { ...process.env, HOME: home, USERPROFILE: home, PROMPTFILM_NO_UPDATE: '' }, old = at('000000000000');
+    const u = async (...a) => (await run(process.execPath, [U, ...a], { env })).out.trim();
+    const asked = await u('--skill', old), skipped = await u('--skill', old, '--skip'), again = await u('--skill', old);
+    fs.writeFileSync(path.join(home, '.promptfilm', 'update.json'), JSON.stringify({ ...JSON.parse(fs.readFileSync(path.join(home, '.promptfilm', 'update.json'), 'utf8')), mode: 'auto' }));
+    const auto = await u('--skill', old, '--dry'), cur = await u('--skill', at(head)), here = await u();
+    fs.writeFileSync(path.join(at(head), 'SKILL.md'), '# test\n');
+    const sw = await u('--skill', old);
     fs.rmSync(d, { recursive: true, force: true });
-    check('self-update', old.out.includes(`would update promptfilm@pf 000000000000 → ${head}`) && !cur.out.trim() && !here.out.trim() && !old.code && !cur.code && !here.code,
-      `an older install: ${old.out.trim() ? 'updates' : 'NOT seen'} · the newest: ${cur.out.trim() ? 'updates again: ' + cur.out.trim() : 'nothing to do'} · outside a plugin install: ${here.out.trim() ? 'acts: ' + here.out.trim() : 'left alone'}`);
+    const ok = { asked: asked.includes(`a newer promptfilm is out: 0000000 → ${head.slice(0, 7)}`) && asked.includes('Nothing was installed'), skipped: /staying on/.test(skipped) && !again,
+      auto: auto.includes(`would update promptfilm@pf 000000000000 → ${head}`), cur: !cur, here: !here, sw: sw.includes(`PF_SKILL=${at(head)}`) };
+    check('updates', Object.values(ok).every(Boolean), Object.entries(ok).filter(([, v]) => !v).length ? 'FAILED: ' + Object.entries(ok).filter(([, v]) => !v).map(([k]) => k).join(', ') + ` · ${asked} | ${again} | ${auto}`
+      : 'an older install asks, installs nothing · "not now" remembered · "always" installs · the newest and a copy outside a plugin: left alone · an installed newer version: switched to');
   });
 
   // 2d) the visual review's material, and the delivery gate: no final video of a build without a passing full QA and a passing review
